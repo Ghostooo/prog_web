@@ -51,13 +51,13 @@ shinyServer(function(input, output) {
     
     output$pca_var <- renderPlot({
         res.PCA<-PCA(dataset() %>%
-                         select_if(is.numeric),quali.sup=c(1,2,3,4,5,12),graph=FALSE)
+                         select_if(is.numeric),graph=FALSE)
         plot.PCA(res.PCA,choix='var',title="Graphe des variables de l'ACP")
     })
     
     output$pca_individ <- renderPlot({
         res.PCA<-PCA(dataset() %>%
-                         select_if(is.numeric),quali.sup=c(1,2,3,4,5,12),graph=FALSE)
+                         select_if(is.numeric),graph=FALSE)
         plot.PCA(res.PCA,title="Graphe des individus de l'ACP")
     })
     
