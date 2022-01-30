@@ -17,14 +17,16 @@ shinyUI(
                                       selectInput(inputId = "nas_choice", label=h3("NAs values"),
                                                   choices=list("Remove" = 1,
                                                                "Fill with mean" = 2,
-                                                               "Use KMeans to fill" = 3),
+                                                               "Use KNN to fill" = 3,
+                                                               "Keep them" = 4),
                                                   selected = 1)
                                ),
                                fluidRow(
                                       checkboxGroupInput(inputId = "pre_pros", label = h3("Pre-Processing"), 
-                                                         choices = list("Normalize Data" = 1,
-                                                                        "Balance Data" = 2,
-                                                                        "Remove Outiliers" = 3),
+                                                         choices = list("Scale Data" = 1,
+                                                                        "Center Data" = 2,
+                                                                        "Balance Data" = 3,
+                                                                        "Replace Outiliers with mean" = 4),
                                                          selected = 1)
                                 ),
                                fluidRow(

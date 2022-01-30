@@ -5,6 +5,17 @@ library(GGally)
 library(reshape2)
 library(ggthemes)
 library(Factoshiny)
+library(outliers)
+source("functions.R")
+
+# in order to install the impute package which is not in the CRAN.
+if (!require("BiocManager"))
+  install.packages("BiocManager")
+if(!require("impute", quietly = TRUE))
+  BiocManager::install("impute")
+library(impute)
+# ----------------------------------------------------------------
+
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
@@ -12,7 +23,33 @@ shinyServer(function(input, output) {
     dataset <- eventReactive(input$load_data, {
         inFile <- input$file
         if(is.null(inFile)) return(NULL)
-        read.csv(inFile$datapath, header=input$file_has_header, stringsAsFactors = TRUE)
+        data <- read.csv(inFile$datapath, header=input$file_has_header, stringsAsFactors = TRUE)
+        
+        
+        # Pre-Processing :
+        
+        ## NA's
+        if(input$nas_choice == 1){ # remove
+          data <- na.omit(data)
+        }else if(input$nas_choice == 2){ # fill with mean
+          data[sapply(data, is.numeric)] <- lapply(data[sapply(data, is.numeric)], function(x) ifelse(is.na(x), mean(x, na.rm = TRUE), x))
+        }else if(input$nas_choice == 3){ # use KNN imputation algorithm to fill the NAs
+          data[sapply(data, is.numeric)] <- impute.knn(as.matrix(data[sapply(data, is.numeric)]))$data
+        }
+        # if it's "Keep them" it will return the dataset as it is.
+        ## Normalisation
+        ### Scaling & Centering
+        sc = "1" %in% input$pre_pros
+        cn = "2" %in% input$pre_pros
+        print(sc)
+        print(cn)
+        data[sapply(data, is.numeric)] <- scale(data[sapply(data, is.numeric)], center=cn, scale=sc)
+        
+        if("4" %in% input$pre_pros){
+          data[sapply(data, is.numeric)] <- sapply(data[sapply(data, is.numeric)], remove_outliers)
+          print("outliers replaced")
+        }
+        return(data)
     })
     
     output$quant_table <- renderTable({
