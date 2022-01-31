@@ -96,7 +96,45 @@ shinyUI(
                                )
                            )
                        ),
-                   tabPanel("Train Models"),
+                   tabPanel(
+                     "Train Models",
+                       tabsetPanel(
+                         tabPanel(
+                           "Pre-training",
+                             sidebarPanel(
+                                 fluidRow(
+                                   uiOutput("target_choices")
+                                 ),
+                               fluidRow(
+                                 selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
+                                             choices=list("Under Sampling" = 1,
+                                                          "Over Sampling" = 2,
+                                                          "Both" = 3,
+                                             selected = 1)
+                                )
+                               ),
+                               fluidRow(
+                                 numericInput("n_sample", label = h3("Sample size"), value = -1),
+                               ),
+                               fluidRow(
+                                 column(3,
+                                        actionButton(inputId="load_data", label="Train models"),
+                                        offset = 3
+                                 )
+                               )
+                             )
+                         ),
+                         tabPanel(
+                           "Logistic Regression"
+                         ),
+                         tabPanel(
+                           "Linear Regression"
+                         ),
+                         tabPanel(
+                           "Decision Tree"
+                         )
+                       )
+                     ),
                    theme=shinytheme("cosmo"),
                    tags$head(tags$style("body {font-family: Times New Roman; font-size: 300%; }", media="screen", type="text/css"))
         )

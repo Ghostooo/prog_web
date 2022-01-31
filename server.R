@@ -98,5 +98,9 @@ shinyServer(function(input, output) {
         plot.PCA(res.PCA,title="Graphe des individus de l'ACP")
     })
     
+    output$target_choices <- renderUI({
+      selectInput(inputId = "target_selected", choices = names(dataset()),
+                  label = "Target Variable")
+    })
 
 })
