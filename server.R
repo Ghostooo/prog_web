@@ -10,6 +10,7 @@ library(rpart)
 library(ISLR)
 source("functions.R")
 library(rattle)
+library(misty)
 attach(Carseats)
 # in order to install the impute package which is not in the CRAN.
 if (!require("BiocManager"))
@@ -21,7 +22,7 @@ library(impute)
 
 
 shinyServer(function(input, output) {
-  df = reactiveValues(data = NULL)
+  df = reactiveValues(data = NULL,col=c())
   dataset <- eventReactive(input$load_data, {
     inFile <- input$file
     if(is.null(inFile)) return(NULL)
@@ -42,6 +43,7 @@ shinyServer(function(input, output) {
       data$na_prop <- apply(data, MARGIN=1, function(x) (sum(is.na(x))) / length(names(x)))
       # keep only the rows with less than prop_nas % of NA values
       data <- data[data$na_prop <= input$prop_nas,]
+      data <- data[,na.prop(t(data))<=input$prop_col_nas]
       data <- data %>%
         select(-na_prop)
     }else if(input$nas_choice == 2){ # fill with mean
@@ -89,17 +91,19 @@ shinyServer(function(input, output) {
   })
   
   output$boxplot <- renderPlot({
+    if(!is.null(df$data)){
     df$data %>%
       select(input$uni_dim_choice_vizu_quant) %>%
       ggplot() +
       geom_boxplot(outlier.colour = "red", aes(x = unlist(dataset()[, input$uni_dim_choice_vizu_quant]), fill = "orange")) +
       labs(x = NULL, y = NULL, title = paste("Boxplot of the ", input$uni_dim_choice_vizu_quant, "variable")) +
       guides(fill=FALSE) +
-      theme_solarized()
+      theme_solarized()}
   })
   
   
   output$barplot <- renderPlot({
+    if(!is.null(df$data)){
     categ_data <- df$data %>%
       select(input$uni_dim_choice_vizu_qual) %>%
       ggplot() +
@@ -108,21 +112,26 @@ shinyServer(function(input, output) {
       guides(fill = FALSE) +
       theme_solarized()
     categ_data
+    }
   })
   
   output$pca_var <- renderPlot({
+    if(!is.null(df$data)){
     res.PCA<-PCA(df$data %>%
                    select_if(is.numeric),graph=FALSE)
     plot.PCA(res.PCA,choix='var',title="Graphe des variables de l'ACP")
+    }
   })
   
   output$pca_individ <- renderPlot({
+    if(!is.null(df$data)){
     res.PCA<-PCA(df$data %>%
                    select_if(is.numeric),graph=FALSE)
     plot.PCA(res.PCA,title="Graphe des individus de l'ACP")
+    }
   })
   
-  output$target_choices <- renderUI({
+  output$target_choices <- renderUI({ss
     selectInput(inputId = "target_selected", choices = names(df$data),
                 label = "Target Variable")
   })
@@ -155,6 +164,16 @@ shinyServer(function(input, output) {
   output$one_table=renderTable({
     if(!is.null(df$data)){
       df$data %>% select(input$col_name)
+    }
+  })
+  
+  output$na_pct=renderText({
+    if(input$col_name!="nothing"){
+      vec = is.na(df$data[,input$col_name])
+      pct=as.character((sum(vec)/length(vec))*100)
+      print("ok")
+      print(pct)
+      paste("the rate of Na value in this column is : ",as.character(pct),"%")
     }
   })
   

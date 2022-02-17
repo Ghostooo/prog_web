@@ -22,6 +22,8 @@ shinyUI(
                                                                "Keep them" = 4),
                                                   selected = 1),
                                       numericInput("prop_nas", label=h3("Minimal proportion per row to remove the NAs"),
+                                                   value = 0.6),
+                                      numericInput("prop_col_nas", label=h3("Minimal proportion per column to remove the NAs"),
                                                    value = 0.6)
                                ),
                                fluidRow(
@@ -49,6 +51,8 @@ shinyUI(
                                         actionButton(inputId="delet_column", label="Delet selected column"),
                                         offset = 2
                                  )
+                               ),fluidRow(
+                                 textOutput(outputId="na_pct")
                                )
                        ),
                        mainPanel(
