@@ -38,14 +38,18 @@ shinyServer(function(input, output) {
     
     # Pre-Processing :
     
+    # transform string data into factors
+    data[, map_lgl(data, function(x) is.character(x))] <- data[, map_lgl(data, function(x) is.character(x))] %>%
+      map(function(x) as.factor(x))
+    
+    
     ## NA's
     if(input$nas_choice == 1){ # remove
-      data$na_prop <- apply(data, MARGIN=1, function(x) (sum(is.na(x))) / length(names(x)))
+      
       # keep only the rows with less than prop_nas % of NA values
-      data <- data[data$na_prop <= input$prop_nas,]
+      data <- data[na.prop(data)<=input$prop_col_nas,]
       data <- data[,na.prop(t(data))<=input$prop_col_nas]
-      data <- data %>%
-        select(-na_prop)
+      
     }else if(input$nas_choice == 2){ # fill with mean
       data[sapply(data, is.numeric)] <- lapply(data[sapply(data, is.numeric)], function(x) ifelse(is.na(x), mean(x, na.rm = TRUE), x))
     }else if(input$nas_choice == 3){ # use KNN imputation algorithm to fill the NAs
@@ -65,9 +69,12 @@ shinyServer(function(input, output) {
       print("outliers replaced")
     }
     
-    # transform string data into factors
-    data[, map_lgl(data, function(x) is.character(x))] <- data[, map_lgl(data, function(x) is.character(x))] %>%
-      map(function(x) as.factor(x))
+    
+    
+  
+    
+    
+    
     return(data)
   })
   
@@ -131,7 +138,7 @@ shinyServer(function(input, output) {
     }
   })
   
-  output$target_choices <- renderUI({ss
+  output$target_choices <- renderUI({
     selectInput(inputId = "target_selected", choices = names(df$data),
                 label = "Target Variable")
   })
@@ -156,35 +163,41 @@ shinyServer(function(input, output) {
   })
   
   observeEvent(df$data,{
-    choices <- c("nothing",names(df$data))
+    choices <- c(names(df$data))
     updateSelectInput(inputId = "col_name", choices = choices)
   })
   
   
   output$one_table=renderTable({
     if(!is.null(df$data)){
-      df$data %>% select(input$col_name)
+      if(!is.null(input$col_name)){
+        df$data %>% select(input$col_name)
+      }
+     
     }
   })
   
   output$na_pct=renderText({
-    if(input$col_name!="nothing"){
-      vec = is.na(df$data[,input$col_name])
-      pct=as.character((sum(vec)/length(vec))*100)
-      print("ok")
-      print(pct)
-      paste("the rate of Na value in this column is : ",as.character(pct),"%")
+    if(!is.null(input$col_name)){
+      if(input$col_name!="nothing"){
+        vec = is.na(df$data[,input$col_name])
+        pct=as.character((sum(vec)/length(vec))*100)
+        print("ok")
+        print(pct)
+        paste("the rate of Na value in this column is : ",as.character(pct),"%")
+      }
     }
   })
   
   
   observeEvent(input$delet_column,{
     if(input$col_name!="nothing"){
-      df$data[[input$col_name]]=NULL
+      df$data[,input$col_name]=NULL
     }
   })
   
   models = reactiveValues(tree = NULL)
+  
   observeEvent(input$load_and_train_data,{
     
     print(dim(df$data))

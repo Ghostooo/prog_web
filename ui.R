@@ -44,7 +44,7 @@ shinyUI(
     
                                ),
                                fluidRow(
-                                 selectInput(inputId="col_name", label = h3("choose a column to show or to delete"),choices = c("nothing"))
+                                 selectInput(inputId="col_name", label = h3("choose a column to show or to delete"),choices = c(""),multiple = TRUE)
                                ),
                                fluidRow(
                                  column(3,
