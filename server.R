@@ -7,7 +7,6 @@ library(ggthemes)
 library(Factoshiny)
 library(outliers)
 library(rpart)
-library(ISLR)
 source("functions.R")
 library(rattle)
 library(misty)
@@ -208,11 +207,13 @@ shinyServer(function(input, output) {
       train=sample(1:nrow(df$data),nrow(df$data)*input$n_train)
       print("here 2")
       test=-train
+      print(input$target_selected)
       print("here 3")
       train_data=df$data[train,]
       test_data_input=df$data[test,!(names(df$data) %in% c(input$target_selected))]
       test_data_output=df$data[test, c(input$target_selected)]
-      models$tree=rpart(input$target_selected~.,train_data)
+      print(input$target_selected)
+      models$tree=rpart(unlist(train_data[, input$target_selected])~., data=train_data[,!(names(df$data) %in% c(input$target_selected))])
     }
   })
   
