@@ -17,11 +17,13 @@ shinyUI(
                                fluidRow(
                                       selectInput(inputId = "nas_choice", label=h3("NAs values"),
                                                   choices=list("Remove" = 1,
-                                                               "Fill with mea n" = 2,
+                                                               "Fill with mean" = 2,
                                                                "Use KNN to fill" = 3,
                                                                "Keep them" = 4),
                                                   selected = 1),
                                       numericInput("prop_nas", label=h3("Minimal proportion per row to remove the NAs"),
+                                                   value = 0.6),
+                                      numericInput("prop_col_nas", label=h3("Minimal proportion per column to remove the NAs"),
                                                    value = 0.6)
                                ),
                                fluidRow(
@@ -40,6 +42,17 @@ shinyUI(
                                           offset = 3
                                           )
     
+                               ),
+                               fluidRow(
+                                 selectInput(inputId="col_name", label = h3("choose a column to show or to delete"),choices = c(""),multiple = TRUE)
+                               ),
+                               fluidRow(
+                                 column(3,
+                                        actionButton(inputId="delet_column", label="Delete selected column"),
+                                        offset = 2
+                                 )
+                               ),fluidRow(
+                                 textOutput(outputId="na_pct")
                                )
                        ),
                        mainPanel(
@@ -68,13 +81,24 @@ shinyUI(
                                    )
                                ),
                                # change style:    
-                               tags$head(tags$style("#cat_table table {background-color: #8bb8bf; }", media="screen", type="text/css"))
+                               tags$head(tags$style("#cat_table table {background-color: #8bb8bf; }", media="screen", type="text/css")),
+                               tabPanel(
+                                 "choosen variable",
+                                 fluidRow(
+                                   column(8,
+                                          tableOutput(outputId = "one_table"),
+                                          offset = 1)
+                                 )
+                               ),
+                               tags$head(tags$style("#one_table table {background-color: #8bb8bf; }", media="screen", type="text/css"))
                            )
-                       )                   
+                        )                   
                        ),
                    tabPanel(
                        "Data Visualization",
-                           tabsetPanel(
+                       navbarPage("",
+                         tabPanel("Visualization for one dimension",
+                            tabsetPanel(
                                tabPanel(
                                    "Quantitative Variables",
                                    uiOutput("uni_dim_vari_choix_quant"),
@@ -103,13 +127,44 @@ shinyUI(
                                    
                                  )
                                )
-                           )
+                          )
                        ),
+                       tabPanel("Data Visualization for two dimensions",
+                                sidebarPanel(
+                                  uiOutput("bi.dim.vari.choix.1.quant"),
+                                  uiOutput("bi.dim.vari.choix.2.quant")
+                                ),
+                                mainPanel(
+                                  tabsetPanel(
+                                    tabPanel(
+                                      "Scatter Plot",
+                                      fluidRow(
+                                        column(6, offset=2, 
+                                          plotOutput(outputId = "nuagePoints")
+                                        )
+                                      )
+                                    ),
+                                    tabPanel(
+                                      "Histogramme",
+                                      # uiOutput("bi.dim.vari.choix.1.quant"),
+                                      # uiOutput("bi.dim.vari.choix.2.quant"),
+                                      fluidRow(
+                                        column(6, offset=2, 
+                                               plotOutput(outputId = "hist")
+                                        )
+                                      )
+                                    ),
+                                    tabPanel("Boites Parallèles")
+                                  )  
+                              )
+                      )
+                     )
+                   ),
                    tabPanel(
                      "Train Models",
-                       tabsetPanel(
-                         tabPanel(
-                           "Pre-training",
+                       sidebarLayout(
+                        
+                           
                              sidebarPanel(
                                  fluidRow(
                                    uiOutput("target_choices")
@@ -127,22 +182,20 @@ shinyUI(
                                ),
                                fluidRow(
                                  column(3,
-                                        actionButton(inputId="load_data", label="Train models"),
+                                        actionButton(inputId="load_and_train_data", label="Train models"),
                                         offset = 3
                                  )
-                               )
+                               ),fluidRow(
+
+                                 sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
+                               ),
                              )
-                         ),
-                         tabPanel(
-                           "Logistic Regression"
-                         ),
-                         tabPanel(
-                           "Linear Regression"
-                         ),
-                         tabPanel(
-                           "Decision Tree"
+                         ,mainPanel(tabsetPanel(
+                         tabPanel("Logistic Regression",),
+                         tabPanel("Linear Regression"),
+                         tabPanel("Decision Tree",plotOutput(outputId = "treeplot"))))
                          )
-                       )
+                       
                      ),
                    theme=shinytheme("cosmo"),
                    tags$head(tags$style("body {font-family: Times New Roman; font-size: 300%; }", media="screen", type="text/css"))
