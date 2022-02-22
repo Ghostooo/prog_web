@@ -172,7 +172,7 @@ shinyServer(function(input, output) {
   
   # the select bar for the quantitative var to plot (as a boxplot)
   output$uni_dim_vari_choix_quant <- renderUI({
-    numericals <- df$data %>%
+    numericals <- dataset() %>%
       select_if(is.numeric) %>%
       names()
     selectInput(inputId = "uni_dim_choice_vizu_quant", choices = numericals,
@@ -183,7 +183,7 @@ shinyServer(function(input, output) {
   
   # the two select bars for the quantitative variables to plot (Ex : Scatter Plot)
   output$bi.dim.vari.choix.1.quant <- renderUI({
-    numericals <- df$data %>%
+    numericals <- dataset() %>%
       select_if(is.numeric) %>%
       names()
     selectInput(inputId = "bi.dim.choice.1.vizu.quant", choices = numericals,
@@ -194,7 +194,7 @@ shinyServer(function(input, output) {
   
   output$bi.dim.vari.choix.2.quant <- renderUI({
     
-    numericals <- df$data %>%
+    numericals <- dataset() %>%
       select_if(is.numeric) %>%
       select(-toString(input$bi.dim.choice.1.vizu.quant)) %>%
       names()
@@ -206,7 +206,7 @@ shinyServer(function(input, output) {
   })
   
   output$uni_dim_vari_choix_qual <- renderUI({
-    factors <- df$data %>%
+    factors <- dataset() %>%
       select_if(is.factor) %>%
       names()
     selectInput(inputId = "uni_dim_choice_vizu_qual", choices = factors,
