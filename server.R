@@ -148,12 +148,13 @@ shinyServer(function(input, output) {
         ggplot() +
         geom_point(aes(x=unlist(df$data[, x.var]),
                       y=unlist(df$data[, y.var])),
-                  size = 4.5,
+                  size = 3.5,
                   col = "blue") +
-        labs(x = "",
-             y = "",
+        labs(x = x.var,
+             y = y.var,
              title=paste("Scatter plot of the", x.var, "and", y.var, "variables.")) +
-        theme_solarized()
+
+        theme_solarized(base_size=15)
     }
     
   })
