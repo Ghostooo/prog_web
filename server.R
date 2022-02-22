@@ -97,42 +97,43 @@ shinyServer(function(input, output) {
   
   output$boxplot <- renderPlot({
     if(!is.null(df$data)){
-    df$data %>%
-      select(input$uni_dim_choice_vizu_quant) %>%
-      ggplot() +
-      geom_boxplot(outlier.colour = "red", aes(x = unlist(dataset()[, input$uni_dim_choice_vizu_quant]), fill = "orange")) +
-      labs(x = NULL, y = NULL, title = paste("Boxplot of the ", input$uni_dim_choice_vizu_quant, "variable")) +
-      guides(fill=FALSE) +
-      theme_solarized()}
+      df$data %>%
+        select(input$uni_dim_choice_vizu_quant) %>%
+        ggplot() +
+        geom_boxplot(outlier.colour = "red", aes(x = unlist(df$data[, input$uni_dim_choice_vizu_quant]), fill = "orange")) +
+        labs(x = NULL, y = NULL, title = paste("Boxplot of the ", input$uni_dim_choice_vizu_quant, "variable")) +
+        guides(fill=FALSE) +
+        theme_solarized()
+    }
   })
   
   
   output$barplot <- renderPlot({
     if(!is.null(df$data)){
-    categ_data <- df$data %>%
-      select(input$uni_dim_choice_vizu_qual) %>%
-      ggplot() +
-      geom_bar(aes(x = unlist(dataset()[, input$uni_dim_choice_vizu_qual]), fill = unlist(dataset()[, input$uni_dim_choice_vizu_qual]))) +
-      labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$uni_dim_choice_vizu_qual, "variable")) +
-      guides(fill = FALSE) +
-      theme_solarized()
-    categ_data
+      categ_data <- df$data %>%
+        select(input$uni_dim_choice_vizu_qual) %>%
+        ggplot() +
+        geom_bar(aes(x = unlist(df$data[, input$uni_dim_choice_vizu_qual]), fill = unlist(df$data[, input$uni_dim_choice_vizu_qual]))) +
+        labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$uni_dim_choice_vizu_qual, "variable")) +
+        guides(fill = FALSE) +
+        theme_solarized()
+      categ_data
     }
   })
   
   output$pca_var <- renderPlot({
     if(!is.null(df$data)){
-    res.PCA<-PCA(df$data %>%
-                   select_if(is.numeric),graph=FALSE)
-    plot.PCA(res.PCA,choix='var',title="Graphe des variables de l'ACP")
+      res.PCA<-PCA(df$data %>%
+                     select_if(is.numeric),graph=FALSE)
+      plot.PCA(res.PCA,choix='var',title="Graphe des variables de l'ACP")
     }
   })
   
   output$pca_individ <- renderPlot({
     if(!is.null(df$data)){
-    res.PCA<-PCA(df$data %>%
-                   select_if(is.numeric),graph=FALSE)
-    plot.PCA(res.PCA,title="Graphe des individus de l'ACP")
+      res.PCA<-PCA(df$data %>%
+                     select_if(is.numeric),graph=FALSE)
+      plot.PCA(res.PCA,title="Graphe des individus de l'ACP")
     }
   })
   
@@ -140,14 +141,16 @@ shinyServer(function(input, output) {
     # Simple nuage de point 
     options(scipen=999)
     
-    x.var = input$bi.dim.choice.1.vizu.quant
-    y.var = input$bi.dim.choice.2.vizu.quant
-    
-    plot(x=unlist(dataset()[, x.var]), y=unlist(dataset()[, y.var]), 
-         col = "red", cex.axis = 0.7,
-         main = paste(y.var, "en fonction de", x.var),
-         xlab = x.var, ylab = y.var, cex.lab = 1.2
-    )
+    if(!is.null(df$data)) {
+      x.var = input$bi.dim.choice.1.vizu.quant
+      y.var = input$bi.dim.choice.2.vizu.quant
+      
+      plot(x=unlist(df$data[, x.var]), y=unlist(df$data[, y.var]), 
+           col = "red", cex.axis = 0.7,
+           main = paste(y.var, "en fonction de", x.var),
+           xlab = x.var, ylab = y.var, cex.lab = 1.2
+      )
+    }
     
     options(scipen=0)
   })
@@ -155,12 +158,14 @@ shinyServer(function(input, output) {
   output$hist <- renderPlot({
     options(digits=1)
     
-    x.var = input$bi.dim.choice.1.vizu.quant
-    y.var = input$bi.dim.choice.2.vizu.quant
+    if(!is.null(df$data)) {
+      x.var = input$bi.dim.choice.1.vizu.quant
+      y.var = input$bi.dim.choice.2.vizu.quant
     
-    Hmisc:::histbackback(x=unlist(dataset()[, x.var]), y = unlist(dataset()[, y.var]),
-                 xlab = c(x.var, y.var), main = paste(x.var, "and", y.var), 
-                 las = 2)
+      Hmisc:::histbackback(x=unlist(df$data[, x.var]), y = unlist(df$data[, y.var]),
+                   xlab = c(x.var, y.var), main = paste(x.var, "and", y.var), 
+                   las = 2)
+    }
   })
   
   # In tabSet Train Models
@@ -172,45 +177,51 @@ shinyServer(function(input, output) {
   
   # the select bar for the quantitative var to plot (as a boxplot)
   output$uni_dim_vari_choix_quant <- renderUI({
-    numericals <- df$data %>%
-      select_if(is.numeric) %>%
-      names()
-    selectInput(inputId = "uni_dim_choice_vizu_quant", choices = numericals,
-                label = "Please choose the variable to plot", selected = numericals[1])
+    if(!is.null(df$data)) {
+      numericals <- df$data %>%
+        select_if(is.numeric) %>%
+        names()
+      selectInput(inputId = "uni_dim_choice_vizu_quant", choices = numericals,
+                  label = "Please choose the variable to plot", selected = numericals[1])
+    }
     
   })
   
   
   # the two select bars for the quantitative variables to plot (Ex : Scatter Plot)
   output$bi.dim.vari.choix.1.quant <- renderUI({
-    numericals <- df$data %>%
-      select_if(is.numeric) %>%
-      names()
-    selectInput(inputId = "bi.dim.choice.1.vizu.quant", choices = numericals,
-                label = "Please choose the variables to plot", selected = numericals[1])
-    
+    if(!is.null(df$data)) {
+      numericals <- df$data %>%
+        select_if(is.numeric) %>%
+        names()
+      selectInput(inputId = "bi.dim.choice.1.vizu.quant", choices = numericals,
+                  label = "Please choose the variables to plot", selected = numericals[1])
+    }
   })
   
   
   output$bi.dim.vari.choix.2.quant <- renderUI({
-    
-    numericals <- df$data %>%
-      select_if(is.numeric) %>%
-      select(-toString(input$bi.dim.choice.1.vizu.quant)) %>%
-      names()
-    
-    selectInput(inputId = "bi.dim.choice.2.vizu.quant",
-                choices = numericals,
-                label = "",
-                selected = numericals[1])
+    if(!is.null(df$data)) {
+      numericals <- df$data %>%
+        select_if(is.numeric) %>%
+        select(-toString(input$bi.dim.choice.1.vizu.quant)) %>%
+        names()
+      
+      selectInput(inputId = "bi.dim.choice.2.vizu.quant",
+                  choices = numericals,
+                  label = "",
+                  selected = numericals[1])
+    }
   })
   
   output$uni_dim_vari_choix_qual <- renderUI({
-    factors <- df$data %>%
-      select_if(is.factor) %>%
-      names()
-    selectInput(inputId = "uni_dim_choice_vizu_qual", choices = factors,
-                label = "Please choose the variable to plot", selected = factors[1])
+    if(!is.null(df$data)){
+      factors <- df$data %>%
+        select_if(is.factor) %>%
+        names()
+      selectInput(inputId = "uni_dim_choice_vizu_qual", choices = factors,
+                  label = "Please choose the variable to plot", selected = factors[1])
+    }
   })
   
   observeEvent(df$data,{
@@ -242,7 +253,7 @@ shinyServer(function(input, output) {
   
   
   observeEvent(input$delet_column,{
-    if(input$col_name!="nothing"){
+    if(length(input$col_name) > 0){
       df$data[,input$col_name]=NULL
     }
   })

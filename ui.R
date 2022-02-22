@@ -146,8 +146,6 @@ shinyUI(
                                     ),
                                     tabPanel(
                                       "Histogramme",
-                                      # uiOutput("bi.dim.vari.choix.1.quant"),
-                                      # uiOutput("bi.dim.vari.choix.2.quant"),
                                       fluidRow(
                                         column(6, offset=2, 
                                                plotOutput(outputId = "hist")
