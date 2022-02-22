@@ -4,7 +4,6 @@ library(tidyverse)
 library(GGally)
 library(reshape2)
 library(ggthemes)
-library(Factoshiny)
 library(outliers)
 library(rpart)
 library(ISLR)
@@ -12,7 +11,7 @@ source("functions.R")
 library(rattle)
 library(misty)
 attach(Carseats)
-
+library(tree)
 # in order to install the impute package which is not in the CRAN.
 if (!require("BiocManager"))
   install.packages("BiocManager")
@@ -244,8 +243,6 @@ shinyServer(function(input, output) {
       if(input$col_name!="nothing"){
         vec = is.na(df$data[,input$col_name])
         pct=as.character((sum(vec)/length(vec))*100)
-        print("ok")
-        print(pct)
         paste("the rate of Na value in this column is : ",as.character(pct),"%")
       }
     }
@@ -262,22 +259,40 @@ shinyServer(function(input, output) {
   
   observeEvent(input$load_and_train_data,{
     
-    print(dim(df$data))
-    print("here 1")
     if(input$n_train!=0){
-      print("here 1")
       set.seed(2)
       train=sample(1:nrow(df$data),nrow(df$data)*input$n_train)
-      print("here 2")
       test=-train
-      print("here 3")
       train_data=df$data[train,]
       test_data_input=df$data[test,!(names(df$data) %in% c(input$target_selected))]
       test_data_output=df$data[test, c(input$target_selected)]
+      
       models$tree=rpart(unlist(train_data[,input$target_selected])~.,
                         data=train_data[, !(names(df$data) %in% c(input$target_selected))])
+      
+      
+      predict.test=predict(models$tree,test_data_input,type="class")
+      predict.test=as.character(predict.test)
+      test_data_output=as.character(unlist(test_data_output))
+      
+      
+      output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
+      pr=models$tree$cptable
+      print("yes")
+      print(pr)
+      output$pruning_plot=renderPlot({
+        plot(pr[,"xerror"],type="b")
+      })
     }
   })
+  
+  
+  observeEvent(input$prune_tree,{
+    if(input$prune_tree!=-1){
+      #models$tree=
+    }
+  })
+  
   
   output$treeplot=renderPlot({
     fancyRpartPlot(models$tree)

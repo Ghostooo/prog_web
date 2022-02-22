@@ -186,12 +186,17 @@ shinyUI(
                                ),fluidRow(
 
                                  sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
-                               ),
+                               ),fluidRow(
+                                 textOutput(outputId="acc_pct")
+                               ),fluidRow( 
+                                 numericInput("pruning", label = h3("give the height of the tree :"), value = -1),
+                                 column(3,actionButton(inputId="prune_tree", label="prune models"),offset=3)
+                               )
                              )
                          ,mainPanel(tabsetPanel(
                          tabPanel("Logistic Regression",),
                          tabPanel("Linear Regression"),
-                         tabPanel("Decision Tree",plotOutput(outputId = "treeplot"))))
+                         tabPanel("Decision Tree",plotOutput(outputId = "treeplot"),plotOutput(outputId = "pruning_plot"))))
                          )
                        
                      ),
