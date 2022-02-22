@@ -139,20 +139,23 @@ shinyServer(function(input, output) {
   
   output$nuagePoints <- renderPlot({
     # Simple nuage de point 
-    options(scipen=999)
     
     if(!is.null(df$data)) {
       x.var = input$bi.dim.choice.1.vizu.quant
       y.var = input$bi.dim.choice.2.vizu.quant
       
-      plot(x=unlist(df$data[, x.var]), y=unlist(df$data[, y.var]), 
-           col = "red", cex.axis = 0.7,
-           main = paste(y.var, "en fonction de", x.var),
-           xlab = x.var, ylab = y.var, cex.lab = 1.2
-      )
+      df$data %>%
+        ggplot() +
+        geom_point(aes(x=unlist(df$data[, x.var]),
+                      y=unlist(df$data[, y.var])),
+                  size = 4.5,
+                  col = "blue") +
+        labs(x = "",
+             y = "",
+             title=paste("Scatter plot of the", x.var, "and", y.var, "variables.")) +
+        theme_solarized()
     }
     
-    options(scipen=0)
   })
    
   output$hist <- renderPlot({
@@ -162,9 +165,14 @@ shinyServer(function(input, output) {
       x.var = input$bi.dim.choice.1.vizu.quant
       y.var = input$bi.dim.choice.2.vizu.quant
     
-      Hmisc:::histbackback(x=unlist(df$data[, x.var]), y = unlist(df$data[, y.var]),
-                   xlab = c(x.var, y.var), main = paste(x.var, "and", y.var), 
-                   las = 2)
+      
+      out <- Hmisc:::histbackback(x=unlist(df$data[, x.var]), y = unlist(df$data[, y.var]),
+                           xlab = c(x.var, y.var), main = paste(x.var, "and", y.var), 
+                           las = 2,
+                           )
+      
+      barplot(-out$left, col="red", horiz=TRUE, space=0, add=TRUE, axes=FALSE)
+      barplot(out$right, col="blue", horiz=TRUE, space=0, add=TRUE, axes=FALSE)
     }
   })
   
