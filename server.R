@@ -7,7 +7,6 @@ library(ggthemes)
 library(Factoshiny)
 library(outliers)
 library(rpart)
-library(ISLR)
 source("functions.R")
 library(rattle)
 library(misty)
@@ -50,8 +49,8 @@ shinyServer(function(input, output) {
     if(input$nas_choice == 1){ # remove
       
       # keep only the rows with less than prop_nas % of NA values
-      data <- data[na.prop(data)<=input$prop_col_nas,]
-      data <- data[,na.prop(t(data))<=input$prop_col_nas]
+      data <- data[na.prop(data)<input$prop_nas,]
+      data <- data[,na.prop(t(data))<input$prop_col_nas]
       
     }else if(input$nas_choice == 2){ # fill with mean
       data[sapply(data, is.numeric)] <- lapply(data[sapply(data, is.numeric)], function(x) ifelse(is.na(x), mean(x, na.rm = TRUE), x))
