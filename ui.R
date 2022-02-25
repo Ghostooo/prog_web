@@ -129,10 +129,13 @@ shinyUI(
                                )
                           )
                        ),
-                       tabPanel("Data Visualization for two dimensions",
+                       tabPanel("Visualization for two dimensions",
                                 sidebarPanel(
                                   uiOutput("bi.dim.vari.choix.1.quant"),
-                                  uiOutput("bi.dim.vari.choix.2.quant")
+                                  uiOutput("bi.dim.vari.choix.2.quant"),
+                                  fluidRow(
+                                    column(8, textOutput("correlation"))
+                                  )
                                 ),
                                 mainPanel(
                                   tabsetPanel(

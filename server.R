@@ -168,6 +168,23 @@ shinyServer(function(input, output) {
     }
   })
   
+  # Calcul et affichage du coefficient de corélation linéaire
+  # ---
+  output$correlation <- renderText({
+    
+    if(!is.null(df$data)) {
+      x.var = input$bi.dim.choice.1.vizu.quant
+      y.var = input$bi.dim.choice.2.vizu.quant
+      
+      data.x = unlist(df$data[, x.var])
+      data.y = unlist(df$data[, y.var])
+      
+      coeff.tmp <- cov(data.x, data.y)/(sqrt(var(data.x)*var(data.y)))
+      paste("Coefficient de corrélation linéaire =", round(coeff.tmp,digits = 2))
+    }
+    
+  })
+  
   # In tabSet Train Models
   output$target_choices <- renderUI({
     selectInput(inputId = "target_selected", choices = names(df$data),
