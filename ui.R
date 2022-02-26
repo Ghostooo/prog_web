@@ -22,9 +22,9 @@ shinyUI(
                                                                "Keep them" = 4),
                                                   selected = 1),
                                       numericInput("prop_nas", label=h3("Minimal proportion per row to remove the NAs"),
-                                                   value = 0.6),
+                                                   min = 0.0, max = 1.0, step=0.1, value = 0.6),
                                       numericInput("prop_col_nas", label=h3("Minimal proportion per column to remove the NAs"),
-                                                   value = 0.6)
+                                                   min = 0.0, max = 1.0, step = 0.1, value = 0.6)
                                ),
                                fluidRow(
                                       checkboxGroupInput(inputId = "pre_pros", label = h3("Pre-Processing"), 
