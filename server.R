@@ -115,15 +115,12 @@ shinyServer(function(input, output) {
     # Note: if const_outliers increase it will consider less outliers.
     # source : https://fr.wikipedia.org/wiki/Donn%C3%A9e_aberrante#Autres_appr%C3%A9ciations_de_la_variabilit%C3%A9
     if(!is.null(df$data)){
-      df_outliers <- df$data
-      df_outliers[input$uni_dim_choice_vizu_quant] <- apply(df_outliers[input$uni_dim_choice_vizu_quant], MARGIN=2,
-                                                            function(x) replace_outliers_k(x, k=input$const_outliers))
-      print(paste("outliers of the", input$uni_dim_choice_vizu_quant, "variable", "replaced with mean according to k constant."))
+      df_outliers <- df$data[input$uni_dim_choice_vizu_quant]
+      df_outliers <- apply(df_outliers, MARGIN=2, function(x) replace_outliers_k(x, k=input$const_outliers))
       # rendering the plot :
-      df_outliers %>%
-        select(input$uni_dim_choice_vizu_quant) %>%
+      data.frame(df_outliers) %>%
         ggplot() +
-        geom_boxplot(outlier.colour = "red", aes(x = unlist(df_outliers[, input$uni_dim_choice_vizu_quant]), fill = "orange")) +
+        geom_boxplot(outlier.colour = "red", aes(x = unlist(df_outliers), fill = "orange")) +
         labs(x = NULL, y = NULL, title = paste("Boxplot of the ", input$uni_dim_choice_vizu_quant, "variable")) +
         guides(fill=FALSE) +
         theme_solarized()
@@ -133,11 +130,9 @@ shinyServer(function(input, output) {
   
   observeEvent(input$apply_outliers, {
     if(!is.null(df$data)){
-      df_outliers <- df$data
-      df_outliers[input$uni_dim_choice_vizu_quant] <- apply(df_outliers[input$uni_dim_choice_vizu_quant], MARGIN=2,
-                                                            function(x) replace_outliers_k(x, k=input$const_outliers))
-      print("outliers replaced with mean according to k constant on the real dataset.")
-      df$data <- df_outliers
+      df_outliers <- df$data[input$uni_dim_choice_vizu_quant]
+      df_outliers <- apply(df_outliers, MARGIN=2, function(x) replace_outliers_k(x, k=input$const_outliers))
+      df$data[input$uni_dim_choice_vizu_quant] <- df_outliers
     } 
   })
   
