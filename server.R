@@ -10,6 +10,7 @@ source("functions.R")
 library(rattle)
 library(misty)
 library(tree)
+library(FactoMineR)
 # in order to install the impute package which is not in the CRAN.
 if (!require("BiocManager"))
   install.packages("BiocManager")
@@ -105,19 +106,19 @@ shinyServer(function(input, output) {
   })
   
   output$boxplot_without_outliers <- renderPlot({
-    # The idea is to replace by mean only the prop_ouliers % of the outliers,
+    # The idea is to replace by mean such that,
     # an outlier is defined according to the equation : 
     # [Q1 - const_outliers*(Q3 - Q1), Q3 + const_outliers*(Q3 - Q1))]
     # This is a generic form of the most used equation to define outliers where we
-    # fix prop_outliers to 1.5 which gives us :
+    # fix const_outliers to 1.5 which gives us :
     # [Q1 - 1.5*(Q3 - Q1), Q3 + 1.5*(Q3 - Q1)]
     # Note: if const_outliers increase it will consider less outliers.
     # source : https://fr.wikipedia.org/wiki/Donn%C3%A9e_aberrante#Autres_appr%C3%A9ciations_de_la_variabilit%C3%A9
     if(!is.null(df$data)){
       df_outliers <- df$data
-      df_outliers[sapply(df_outliers, is.numeric)] <- apply(df_outliers[sapply(df_outliers, is.numeric)], MARGIN=2,
+      df_outliers[input$uni_dim_choice_vizu_quant] <- apply(df_outliers[input$uni_dim_choice_vizu_quant], MARGIN=2,
                                                             function(x) replace_outliers_k(x, k=input$const_outliers))
-      print("outliers replaced with mean according to k constant.")
+      print(paste("outliers of the", input$uni_dim_choice_vizu_quant, "variable", "replaced with mean according to k constant."))
       # rendering the plot :
       df_outliers %>%
         select(input$uni_dim_choice_vizu_quant) %>%
@@ -127,6 +128,17 @@ shinyServer(function(input, output) {
         guides(fill=FALSE) +
         theme_solarized()
     }
+  })
+  
+  
+  observeEvent(input$apply_outliers, {
+    if(!is.null(df$data)){
+      df_outliers <- df$data
+      df_outliers[input$uni_dim_choice_vizu_quant] <- apply(df_outliers[input$uni_dim_choice_vizu_quant], MARGIN=2,
+                                                            function(x) replace_outliers_k(x, k=input$const_outliers))
+      print("outliers replaced with mean according to k constant on the real dataset.")
+      df$data <- df_outliers
+    } 
   })
   
   

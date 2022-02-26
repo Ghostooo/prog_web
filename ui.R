@@ -130,6 +130,14 @@ shinyUI(
                                            plotOutput(outputId = "boxplot_without_outliers"),
                                            offset = 1
                                     )
+                                  ),
+                                  fluidRow(
+                                    column(4,
+                                           actionButton(inputId="apply_outliers", label="Apply on real data", width = "70%"),
+                                           offset=4)
+                                  ),
+                                  fluidRow(
+                                    tags$i('Note: this operation is irreversible.')
                                   )
                                ),
                                tabPanel(
