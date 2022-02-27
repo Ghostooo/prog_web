@@ -6,12 +6,11 @@ library(reshape2)
 library(ggthemes)
 library(outliers)
 library(rpart)
-library(ISLR)
 source("functions.R")
 library(rattle)
 library(misty)
-attach(Carseats)
 library(tree)
+library(FactoMineR)
 # in order to install the impute package which is not in the CRAN.
 if (!require("BiocManager"))
   install.packages("BiocManager")
@@ -104,6 +103,37 @@ shinyServer(function(input, output) {
         guides(fill=FALSE) +
         theme_solarized()
     }
+  })
+  
+  output$boxplot_without_outliers <- renderPlot({
+    # The idea is to replace by mean such that,
+    # an outlier is defined according to the equation : 
+    # [Q1 - const_outliers*(Q3 - Q1), Q3 + const_outliers*(Q3 - Q1))]
+    # This is a generic form of the most used equation to define outliers where we
+    # fix const_outliers to 1.5 which gives us :
+    # [Q1 - 1.5*(Q3 - Q1), Q3 + 1.5*(Q3 - Q1)]
+    # Note: if const_outliers increase it will consider less outliers.
+    # source : https://fr.wikipedia.org/wiki/Donn%C3%A9e_aberrante#Autres_appr%C3%A9ciations_de_la_variabilit%C3%A9
+    if(!is.null(df$data)){
+      df_outliers <- df$data[input$uni_dim_choice_vizu_quant]
+      df_outliers <- apply(df_outliers, MARGIN=2, function(x) replace_outliers_k(x, k=input$const_outliers))
+      # rendering the plot :
+      data.frame(df_outliers) %>%
+        ggplot() +
+        geom_boxplot(outlier.colour = "red", aes(x = unlist(df_outliers), fill = "orange")) +
+        labs(x = NULL, y = NULL, title = paste("Boxplot of the ", input$uni_dim_choice_vizu_quant, "variable")) +
+        guides(fill=FALSE) +
+        theme_solarized()
+    }
+  })
+  
+  
+  observeEvent(input$apply_outliers, {
+    if(!is.null(df$data)){
+      df_outliers <- df$data[input$uni_dim_choice_vizu_quant]
+      df_outliers <- apply(df_outliers, MARGIN=2, function(x) replace_outliers_k(x, k=input$const_outliers))
+      df$data[input$uni_dim_choice_vizu_quant] <- df_outliers
+    } 
   })
   
   

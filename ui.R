@@ -30,8 +30,7 @@ shinyUI(
                                       checkboxGroupInput(inputId = "pre_pros", label = h3("Pre-Processing"), 
                                                          choices = list("Scale Data" = 1,
                                                                         "Center Data" = 2,
-                                                                        "Replace Outiliers with mean (more on Data Visualization)" = 4),
-                                                         selected = 1)
+                                                                        "Replace Outiliers with mean (more on Data Visualization)" = 4))
                                 ),
                                fluidRow(
                                     numericInput("n_sample", label = h3("Sample size"), value = -1),
@@ -102,11 +101,44 @@ shinyUI(
                                tabPanel(
                                    "Quantitative Variables",
                                    uiOutput("uni_dim_vari_choix_quant"),
+                                   fluidRow(tags$u("Before replacing outliers with mean according to k constant :")),
                                    fluidRow(
                                        column(8,
                                               plotOutput(outputId = "boxplot"),
                                               offset = 1)
-                                   )
+                                   ),
+                                  fluidRow(
+                                    tagList(tags$i("Fix the positive constant k to define outliers according to"),
+                                            a('this method',
+                                              href = "https://fr.wikipedia.org/wiki/Donn%C3%A9e_aberrante#Autres_appr%C3%A9ciations_de_la_variabilit%C3%A9"),
+                                            tags$i('(replace with mean).'))
+                                  ),
+                                  fluidRow(
+                                    sliderInput("const_outliers",
+                                                min=0,
+                                                max = 5,
+                                                value=1.5,
+                                                step = 0.2,
+                                                animate = TRUE,
+                                                label="",
+                                                width = "100%"
+                                    )
+                                  ),
+                                  fluidRow(tags$u("After replacing outliers with mean according to k constant :")),
+                                  fluidRow(
+                                    column(8,
+                                           plotOutput(outputId = "boxplot_without_outliers"),
+                                           offset = 1
+                                    )
+                                  ),
+                                  fluidRow(
+                                    column(4,
+                                           actionButton(inputId="apply_outliers", label="Apply on real data", width = "70%"),
+                                           offset=4)
+                                  ),
+                                  fluidRow(
+                                    tags$i('Note: this operation is irreversible.')
+                                  )
                                ),
                                tabPanel(
                                    "Categorical Variables",
