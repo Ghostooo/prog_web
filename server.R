@@ -173,16 +173,17 @@ shinyServer(function(input, output) {
       x.var = input$bi.dim.choice.1.vizu.quant
       y.var = input$bi.dim.choice.2.vizu.quant
       
+      data.x = unlist(df$data[, x.var])
+      data.y = unlist(df$data[, y.var])
+      
       df$data %>%
-        ggplot() +
-        geom_point(aes(x=unlist(df$data[, x.var]),
-                      y=unlist(df$data[, y.var])),
-                  size = 3.5,
-                  col = "blue") +
-        labs(x = x.var,
-             y = y.var,
+        ggplot(aes(x=data.x, y=data.y)) +
+        geom_point(size = 3.5, col = "blue") +
+        # Droite de régression linéaire
+        geom_smooth(method=input$in.bi.dim.choice.method, col="red") +
+        labs(x = x.var,y = y.var,
              title=paste("Scatter plot of the", x.var, "and", y.var, "variables.")) +
-
+        
         theme_solarized(base_size=15)
     }
     
@@ -266,6 +267,17 @@ shinyServer(function(input, output) {
                   choices = numericals,
                   label = "",
                   selected = numericals[1])
+    }
+  })
+  
+  output$out.bi.dim.choice.method <- renderUI({
+    if(!is.null(df$data)) {
+      methods <- c("lm", "glm", "loess")
+      
+      selectInput(inputId = "in.bi.dim.choice.method",
+                  choices = methods,
+                  label = "Choose method",
+                  selected = methods[1])
     }
   })
   

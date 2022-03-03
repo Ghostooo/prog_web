@@ -173,6 +173,7 @@ shinyUI(
                                   tabsetPanel(
                                     tabPanel(
                                       "Scatter Plot",
+                                      uiOutput("out.bi.dim.choice.method"),
                                       fluidRow(
                                         column(6, offset=2, 
                                           plotOutput(outputId = "nuagePoints")
