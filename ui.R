@@ -201,15 +201,8 @@ shinyUI(
                              sidebarPanel(
                                  fluidRow(
                                    uiOutput("target_choices")
-                                 ),
-                               fluidRow(
-                                 selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
-                                             choices=list("Under Sampling" = 1,
-                                                          "Over Sampling" = 2,
-                                                          "Both" = 3,
-                                             selected = 1)
-                                )
-                               ),
+                                 )
+                               ,
                                fluidRow(
                                  numericInput("n_sample", label = h3("Sample size"), value = -1),
                                ),
@@ -229,7 +222,34 @@ shinyUI(
                                )
                              )
                          ,mainPanel(tabsetPanel(
-                         tabPanel("Logistic Regression",),
+                         tabPanel("Balancing Method",
+                                  column(6,
+                                         plotOutput(outputId = "data_balancing_barplot")
+                                         ),
+                                  column(4,
+                                         fluidRow(
+                                           selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
+                                                       choices=list("Under Sampling" = 1,
+                                                                    "Over Sampling" = 2,
+                                                                    "Both" = 3,
+                                                                    selected = 2
+                                                       )
+                                           )
+                                         ),
+                                         fluidRow(
+                                           numericInput(inputId = "balancing_data_size",
+                                                        label = "Data Output Size (N)",
+                                                        min = 0, max = 10000, step=2, value = 10),
+                                           tags$i("please read the description below.")
+                                         ),
+                                         offset = 1),
+                                  fluidRow(
+                                    column(12,
+                                           htmlOutput(outputId = "explain_balancing_method")
+                                    )
+                                  )
+                         ),
+                         tabPanel("Logistic Regression"),
                          tabPanel("Linear Regression"),
                          tabPanel("Decision Tree",plotOutput(outputId = "treeplot"),plotOutput(outputId = "pruning_plot"))))
                          )

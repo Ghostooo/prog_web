@@ -351,7 +351,51 @@ shinyServer(function(input, output) {
   
   
   output$treeplot=renderPlot({
-    fancyRpartPlot(models$tree)
+    if(!null(models$tree))
+      fancyRpartPlot(models$tree)
+  })
+  
+  output$data_balancing_barplot <- renderPlot({
+    if(!is.null(df$data)){
+      categ_data <- df$data %>%
+        select(input$target_selected) %>%
+        ggplot() +
+        geom_bar(aes(x = unlist(df$data[, input$target_selected]), fill = unlist(df$data[, input$target_selected]))) +
+        labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$target_selected, "variable")) +
+        guides(fill = FALSE) +
+        theme_solarized()
+      categ_data
+    }
+  })
+  
+  
+  output$explain_balancing_method <- renderText({
+    
+    if(input$balancing_choice == "1"){
+      # Under Sampling
+      text <- paste("<u><h2>Choosed: <b>Under-Sampling</b></h2></u>",
+                    "<i>This method works with majority class.",
+                    "It reduces the number of observations from majority class to make the data set balanced.",
+                    "The constant <b>N</b> represents the size of the output dataset",
+                    "so basically if you want a proportional dataset juste take (default value):",
+                    "<br><br><b>N = size_of_dataset - (size_majority_class - size_minority_class)</b><br><br>",
+                    "which means that it will undersample the size_majority until N so it will",
+                    "remove the difference between the majority and minority classes.</i>")
+    }
+
+    if(input$balancing_choice == "2"){
+      # Over Sampling
+      text <- paste("<u><h2>Choosed: <b>Over-Sampling</b></h2></u>",
+                    "<i>This method works with minority class.",
+                    "It increases the number of observations of the minority class to make the data set balanced.",
+                    "The constant <b>N</b> represents the size of the output dataset",
+                    "so basically if you want a proportional dataset juste take (default value):",
+                    "<br><br><b>N = size_of_dataset + (size_majority_class - size_minority_class)</b><br><br>",
+                    "which means that it will oversample the size_minority until N so it will",
+                    "add the difference between the majority and minority classes.</i>")
+    }
+
+    return(text)
   })
   
   
