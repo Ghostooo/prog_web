@@ -11,6 +11,8 @@ library(rattle)
 library(misty)
 library(tree)
 library(FactoMineR)
+# for data balancing :
+library(ROSE)
 # in order to install the impute package which is not in the CRAN.
 if (!require("BiocManager"))
   install.packages("BiocManager")
@@ -357,15 +359,60 @@ shinyServer(function(input, output) {
   
   output$data_balancing_barplot <- renderPlot({
     if(!is.null(df$data)){
-      categ_data <- df$data %>%
+
+
+      
+      data_to_use <- df$data %>% select_if(function(x) !any(is.na(x)))  %>% as.data.frame()
+      
+      
+      
+      
+      data_balancing_formula <- as.formula(paste(input$target_selected,
+                                                paste(names(data_to_use)[!names(data_to_use) %in% c(input$target_selected)], collapse = " + "),
+                                                sep=" ~ "))
+      print(data_balancing_formula)
+      df_balancing <-  ROSE(data_balancing_formula,
+                            data=data_to_use,
+                            N=input$balancing_data_size,
+      )$data
+      
+      
+      
+      categ_data <- df_balancing %>%
         select(input$target_selected) %>%
         ggplot() +
-        geom_bar(aes(x = unlist(df$data[, input$target_selected]), fill = unlist(df$data[, input$target_selected]))) +
+        geom_bar(aes(x = unlist(df_balancing[, input$target_selected]), fill = unlist(df_balancing[, input$target_selected]))) +
         labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$target_selected, "variable")) +
         guides(fill = FALSE) +
         theme_solarized()
       categ_data
     }
+  })
+  
+  output$balancing_size <- renderUI({
+    n_lvl1 <- (table(df$data[, input$target_selected])[1]) %>% as.numeric()
+    n_lvl2 <- (table(df$data[, input$target_selected])[2]) %>% as.numeric()
+    if(input$balancing_choice == '1'){
+      val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
+      val <- nrow(df$data)%/%2 + val
+      m <- nrow(df$data)
+      mi <- 2
+    }else{
+      val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
+      val <- nrow(df$data) + val
+      m <- nrow(df$data)*2
+      mi <- nrow(df$data)
+    }
+    print(paste("val=", val))
+    sliderInput("balancing_data_size",
+                max = m,
+                min=mi,
+                value=val,
+                step = 1,
+                animate = TRUE,
+                label="",
+                width = "100%"
+    )
   })
   
   
@@ -394,8 +441,18 @@ shinyServer(function(input, output) {
                     "which means that it will oversample the size_minority until N so it will",
                     "add the difference between the majority and minority classes.</i>")
     }
+    
+    if(input$balancing_choice == "3"){
+      # Both oversampling and undersampling
+      text <- paste("to be completed.")
+    }
 
     return(text)
+  })
+  
+  
+  output$note_balancing_data <- renderText({
+    text <- paste('\n\n<b><u>Note:</u> the results are not fixed because of the probability of resampling from the rare class. If missing and method is either "over" or "under" this proportion is determined by oversampling or, respectively, undersampling examples so that the sample size is equal to N.</b>')
   })
   
   

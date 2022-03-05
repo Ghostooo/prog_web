@@ -231,22 +231,21 @@ shinyUI(
                                            selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
                                                        choices=list("Under Sampling" = 1,
                                                                     "Over Sampling" = 2,
-                                                                    "Both" = 3,
                                                                     selected = 2
                                                        )
                                            )
                                          ),
                                          fluidRow(
-                                           numericInput(inputId = "balancing_data_size",
-                                                        label = "Data Output Size (N)",
-                                                        min = 0, max = 10000, step=2, value = 10),
+                                           uiOutput("balancing_size"),
                                            tags$i("please read the description below.")
                                          ),
                                          offset = 1),
                                   fluidRow(
                                     column(12,
                                            htmlOutput(outputId = "explain_balancing_method")
-                                    )
+                                    ),
+                                    column(12,
+                                           htmlOutput(outputId = "note_balancing_data"))
                                   )
                          ),
                          tabPanel("Logistic Regression"),
