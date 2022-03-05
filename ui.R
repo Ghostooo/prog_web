@@ -202,15 +202,8 @@ shinyUI(
                              sidebarPanel(
                                  fluidRow(
                                    uiOutput("target_choices")
-                                 ),
-                               fluidRow(
-                                 selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
-                                             choices=list("Under Sampling" = 1,
-                                                          "Over Sampling" = 2,
-                                                          "Both" = 3,
-                                             selected = 1)
-                                )
-                               ),
+                                 )
+                               ,
                                fluidRow(
                                  numericInput("n_sample", label = h3("Sample size"), value = -1),
                                ),
@@ -230,7 +223,52 @@ shinyUI(
                                )
                              )
                          ,mainPanel(tabsetPanel(
-                         tabPanel("Logistic Regression",),
+                         tabPanel("Balancing Method",
+                                  fluidRow(
+                                    column(6,
+                                           uiOutput("target_choices_balancing"))
+                                  ),
+                                  fluidRow(
+                                    tags$i(tags$b("Only for two levels targets."))
+                                  ),
+                                  fluidRow(tags$h3(tags$u("Before balancing:"))),
+                                  fluidRow(
+                                    column(6,
+                                           plotOutput(outputId = "data_balancing_before")
+                                    ),
+                                    column(4,
+                                           fluidRow(
+                                             selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
+                                                         choices=list("Under Sampling" = 1,
+                                                                      "Over Sampling" = 2,
+                                                                      selected = 2
+                                                         )
+                                             )
+                                           ),
+                                           fluidRow(
+                                             uiOutput("balancing_size"),
+                                             tags$i("please read the description below.")
+                                           ),
+                                           fluidRow(
+                                             actionButton(inputId="apply_balancing", label="Apply On Real Data")
+                                           ),
+                                           offset = 1)
+                                  ),
+                                  fluidRow(tags$h3(tags$u("After balancing:"))),
+                                  fluidRow(
+                                         column(6,
+                                                plotOutput(outputId = "data_balancing_barplot")
+                                         )
+                                  ),
+                                  fluidRow(
+                                    column(12,
+                                           htmlOutput(outputId = "explain_balancing_method")
+                                    ),
+                                    column(12,
+                                           htmlOutput(outputId = "note_balancing_data"))
+                                  )
+                         ),
+                         tabPanel("Logistic Regression"),
                          tabPanel("Linear Regression"),
                          tabPanel("Decision Tree",plotOutput(outputId = "treeplot"),plotOutput(outputId = "pruning_plot"))))
                          )
