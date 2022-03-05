@@ -232,6 +232,13 @@ shinyServer(function(input, output) {
   })
   
   
+  output$target_choices_balancing <- renderUI({
+    selectInput(inputId = "target_selected_balancing", choices = names(df$data %>% mutate_if(is.character, factor) %>%
+                                                                         select_if(~ nlevels(.) == 2)),
+                label = "Variable to balance",
+                width = "100%")
+  })
+  
   # the select bar for the quantitative var to plot (as a boxplot)
   output$uni_dim_vari_choix_quant <- renderUI({
     if(!is.null(df$data)) {
@@ -367,8 +374,8 @@ shinyServer(function(input, output) {
       
       
       
-      data_balancing_formula <- as.formula(paste(input$target_selected,
-                                                paste(names(data_to_use)[!names(data_to_use) %in% c(input$target_selected)], collapse = " + "),
+      data_balancing_formula <- as.formula(paste(input$target_selected_balancing,
+                                                paste(names(data_to_use)[!names(data_to_use) %in% c(input$target_selected_balancing)], collapse = " + "),
                                                 sep=" ~ "))
       print(data_balancing_formula)
       df_balancing <-  ROSE(data_balancing_formula,
@@ -379,10 +386,10 @@ shinyServer(function(input, output) {
       
       
       categ_data <- df_balancing %>%
-        select(input$target_selected) %>%
+        select(input$target_selected_balancing) %>%
         ggplot() +
-        geom_bar(aes(x = unlist(df_balancing[, input$target_selected]), fill = unlist(df_balancing[, input$target_selected]))) +
-        labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$target_selected, "variable")) +
+        geom_bar(aes(x = unlist(df_balancing[, input$target_selected_balancing]), fill = unlist(df_balancing[, input$target_selected_balancing]))) +
+        labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$target_selected_balancing, "variable")) +
         guides(fill = FALSE) +
         theme_solarized()
       categ_data
@@ -390,8 +397,8 @@ shinyServer(function(input, output) {
   })
   
   output$balancing_size <- renderUI({
-    n_lvl1 <- (table(df$data[, input$target_selected])[1]) %>% as.numeric()
-    n_lvl2 <- (table(df$data[, input$target_selected])[2]) %>% as.numeric()
+    n_lvl1 <- (table(df$data[, input$target_selected_balancing])[1]) %>% as.numeric()
+    n_lvl2 <- (table(df$data[, input$target_selected_balancing])[2]) %>% as.numeric()
     if(input$balancing_choice == '1'){
       val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
       val <- nrow(df$data)%/%2 + val

@@ -242,6 +242,10 @@ shinyUI(
                                          offset = 1),
                                   fluidRow(
                                     column(12,
+                                           uiOutput("target_choices_balancing"))
+                                  ),
+                                  fluidRow(
+                                    column(12,
                                            htmlOutput(outputId = "explain_balancing_method")
                                     ),
                                     column(12,
