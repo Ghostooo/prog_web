@@ -233,10 +233,12 @@ shinyServer(function(input, output) {
   
   
   output$target_choices_balancing <- renderUI({
-    selectInput(inputId = "target_selected_balancing", choices = names(df$data %>% mutate_if(is.character, factor) %>%
-                                                                         select_if(~ nlevels(.) == 2)),
-                label = "Variable to balance",
-                width = "100%")
+    if(!is.null(df$data)){
+      selectInput(inputId = "target_selected_balancing", choices = names(df$data %>% mutate_if(is.character, factor) %>%
+                                                                           select_if(~ nlevels(.) == 2)),
+                  label = "Variable to balance",
+                  width = "100%")      
+    }
   })
   
   # the select bar for the quantitative var to plot (as a boxplot)
@@ -364,31 +366,43 @@ shinyServer(function(input, output) {
       fancyRpartPlot(models$tree)
   })
   
-  output$data_balancing_barplot <- renderPlot({
+  
+  output$data_balancing_before <- renderPlot({
     if(!is.null(df$data)){
-
-
-      
-      data_to_use <- df$data %>% select_if(function(x) !any(is.na(x)))  %>% as.data.frame()
-      
-      
-      
-      
-      data_balancing_formula <- as.formula(paste(input$target_selected_balancing,
-                                                paste(names(data_to_use)[!names(data_to_use) %in% c(input$target_selected_balancing)], collapse = " + "),
-                                                sep=" ~ "))
-      print(data_balancing_formula)
-      df_balancing <-  ROSE(data_balancing_formula,
-                            data=data_to_use,
-                            N=input$balancing_data_size,
-      )$data
-      
-      
-      
-      categ_data <- df_balancing %>%
+      categ_data <- df$data %>%
         select(input$target_selected_balancing) %>%
         ggplot() +
-        geom_bar(aes(x = unlist(df_balancing[, input$target_selected_balancing]), fill = unlist(df_balancing[, input$target_selected_balancing]))) +
+        geom_bar(aes(x = unlist(df$data[, input$target_selected_balancing]), fill = unlist(df$data[, input$target_selected_balancing]))) +
+        labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$target_selected_balancing, "variable")) +
+        guides(fill = FALSE) +
+        theme_solarized()
+      categ_data
+    }
+  })
+  
+  df_balancing_ <- eventReactive(input$balancing_data_size, {
+    df_tmp <- df$data
+    df_tmp[sapply(df_tmp, is.numeric)] <- impute.knn(as.matrix(df_tmp[sapply(df_tmp, is.numeric)]))$data
+    df_tmp[sapply(df_tmp, is.factor)] <- lapply(df_tmp[sapply(df_tmp, is.factor)], addNA)
+    data_to_use <- df_tmp
+    data_balancing_formula <- as.formula(paste(input$target_selected_balancing,
+                                               paste(names(data_to_use)[!names(data_to_use) %in% c(input$target_selected_balancing)], collapse = " + "),
+                                               sep=" ~ "))
+    df_balancing <-  ROSE(data_balancing_formula,
+                          data=data_to_use,
+                          N=input$balancing_data_size,
+    )$data
+    df_balancing
+  })
+  
+  output$data_balancing_barplot <- renderPlot({
+    if(!is.null(df$data)){
+      
+      print(df_balancing_()[, input$target_selected])
+      categ_data <- df_balancing_() %>%
+        select(input$target_selected_balancing) %>%
+        ggplot() +
+        geom_bar(aes(x = unlist(df_balancing_()[, input$target_selected_balancing]), fill = unlist(df_balancing_()[, input$target_selected_balancing]))) +
         labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$target_selected_balancing, "variable")) +
         guides(fill = FALSE) +
         theme_solarized()
@@ -397,29 +411,31 @@ shinyServer(function(input, output) {
   })
   
   output$balancing_size <- renderUI({
-    n_lvl1 <- (table(df$data[, input$target_selected_balancing])[1]) %>% as.numeric()
-    n_lvl2 <- (table(df$data[, input$target_selected_balancing])[2]) %>% as.numeric()
-    if(input$balancing_choice == '1'){
-      val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
-      val <- nrow(df$data)%/%2 + val
-      m <- nrow(df$data)
-      mi <- 2
-    }else{
-      val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
-      val <- nrow(df$data) + val
-      m <- nrow(df$data)*2
-      mi <- nrow(df$data)
+    
+    if(!is.null(df$data)){
+      n_lvl1 <- (table(df$data[, input$target_selected_balancing])[1]) %>% as.numeric()
+      n_lvl2 <- (table(df$data[, input$target_selected_balancing])[2]) %>% as.numeric()
+      if(input$balancing_choice == '1'){
+        val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
+        val <- nrow(df$data)%/%2 + val
+        m <- nrow(df$data)
+        mi <- 2
+      }else{
+        val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
+        val <- nrow(df$data) + val
+        m <- nrow(df$data)*2
+        mi <- nrow(df$data)
+      }
+      sliderInput("balancing_data_size",
+                  max = m,
+                  min=mi,
+                  value=val,
+                  step = 1,
+                  animate = TRUE,
+                  label="",
+                  width = "100%"
+      )
     }
-    print(paste("val=", val))
-    sliderInput("balancing_data_size",
-                max = m,
-                min=mi,
-                value=val,
-                step = 1,
-                animate = TRUE,
-                label="",
-                width = "100%"
-    )
   })
   
   
@@ -459,9 +475,16 @@ shinyServer(function(input, output) {
   
   
   output$note_balancing_data <- renderText({
-    text <- paste('\n\n<b><u>Note:</u> the results are not fixed because of the probability of resampling from the rare class. If missing and method is either "over" or "under" this proportion is determined by oversampling or, respectively, undersampling examples so that the sample size is equal to N.</b>')
+    text <- paste('<br><br><b><u>Note:</u> the results are not fixed because of the probability of resampling from the rare class. If missing and method is either "over" or "under" this proportion is determined by oversampling or, respectively, undersampling examples so that the sample size is equal to N.</b>')
   })
   
+
   
+  observeEvent(input$apply_balancing, {
+    if(!is.null(df$data) && !is.null(df_balancing_())){
+
+      df$data <- df_balancing_()
+    } 
+  })
   
 })

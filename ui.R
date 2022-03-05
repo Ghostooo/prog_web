@@ -223,26 +223,41 @@ shinyUI(
                              )
                          ,mainPanel(tabsetPanel(
                          tabPanel("Balancing Method",
-                                  column(6,
-                                         plotOutput(outputId = "data_balancing_barplot")
-                                         ),
-                                  column(4,
-                                         fluidRow(
-                                           selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
-                                                       choices=list("Under Sampling" = 1,
-                                                                    "Over Sampling" = 2,
-                                                                    selected = 2
-                                                       )
-                                           )
-                                         ),
-                                         fluidRow(
-                                           uiOutput("balancing_size"),
-                                           tags$i("please read the description below.")
-                                         ),
-                                         offset = 1),
                                   fluidRow(
-                                    column(12,
+                                    column(6,
                                            uiOutput("target_choices_balancing"))
+                                  ),
+                                  fluidRow(
+                                    tags$i(tags$b("Only for two levels targets."))
+                                  ),
+                                  fluidRow(tags$h3(tags$u("Before balancing:"))),
+                                  fluidRow(
+                                    column(6,
+                                           plotOutput(outputId = "data_balancing_before")
+                                    ),
+                                    column(4,
+                                           fluidRow(
+                                             selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
+                                                         choices=list("Under Sampling" = 1,
+                                                                      "Over Sampling" = 2,
+                                                                      selected = 2
+                                                         )
+                                             )
+                                           ),
+                                           fluidRow(
+                                             uiOutput("balancing_size"),
+                                             tags$i("please read the description below.")
+                                           ),
+                                           fluidRow(
+                                             actionButton(inputId="apply_balancing", label="Apply On Real Data")
+                                           ),
+                                           offset = 1)
+                                  ),
+                                  fluidRow(tags$h3(tags$u("After balancing:"))),
+                                  fluidRow(
+                                         column(6,
+                                                plotOutput(outputId = "data_balancing_barplot")
+                                         )
                                   ),
                                   fluidRow(
                                     column(12,
