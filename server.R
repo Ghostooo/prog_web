@@ -338,7 +338,7 @@ shinyServer(function(input, output) {
   
   observeEvent(input$load_and_train_data,{
     
-    if(input$n_train!=0){
+    if(input$n_train!=0 && !(is.null(df$data)) && input$mdl=="Decission Tree"){
       set.seed(2)
       train=sample(1:nrow(df$data),nrow(df$data)*input$n_train)
       test=-train
@@ -357,24 +357,45 @@ shinyServer(function(input, output) {
       
       output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
       pr=models$tree$cptable
-      print("yes")
-      print(pr)
+
       output$pruning_plot=renderPlot({
         plot(pr[,"xerror"],type="b")
       })
+      
+      output$cp_table=renderTable({pr})
     }
   })
   
   
   observeEvent(input$prune_tree,{
-    if(input$prune_tree!=-1){
-      #models$tree=
+    if(input$pruning!=1){
+      models$tree=prune(models$tree, input$pruning)
+      
+      set.seed(2)
+      train=sample(1:nrow(df$data),nrow(df$data)*input$n_train)
+      test=-train
+      
+      print("ok ;;;;")
+      test_data_input=df$data[test,!(names(df$data) %in% c(input$target_selected))]
+      test_data_output=df$data[test, c(input$target_selected)]
+      
+      
+      predict.test=predict(models$tree,test_data_input,type="class")
+      predict.test=as.character(predict.test)
+      
+      test_data_output=as.character(unlist(test_data_output))
+      
+      
+      output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
+      
+      
+      
     }
   })
   
   
   output$treeplot=renderPlot({
-    if(!null(models$tree))
+    if(!is.null(models$tree))
       fancyRpartPlot(models$tree)
   })
   

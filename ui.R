@@ -109,7 +109,7 @@ shinyUI(
                                    ),
                                   fluidRow(
                                     tagList(tags$i("Fix the positive constant k to define outliers according to"),
-                                            a('this method',
+                                            tags$a('this method',
                                               href = "https://fr.wikipedia.org/wiki/Donn%C3%A9e_aberrante#Autres_appr%C3%A9ciations_de_la_variabilit%C3%A9"),
                                             tags$i('(replace with mean).'))
                                   ),
@@ -205,9 +205,6 @@ shinyUI(
                                  )
                                ,
                                fluidRow(
-                                 numericInput("n_sample", label = h3("Sample size"), value = -1),
-                               ),
-                               fluidRow(
                                  column(3,
                                         actionButton(inputId="load_and_train_data", label="Train models"),
                                         offset = 3
@@ -217,9 +214,8 @@ shinyUI(
                                  sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
                                ),fluidRow(
                                  textOutput(outputId="acc_pct")
-                               ),fluidRow( 
-                                 numericInput("pruning", label = h3("give the height of the tree :"), value = -1),
-                                 column(3,actionButton(inputId="prune_tree", label="prune models"),offset=3)
+                               ),fluidRow(
+                                 radioButtons("mdl",h3("choose your model : "),choices=c("Logistic Regression","Linear Regression","Decission Tree"))
                                )
                              )
                          ,mainPanel(tabsetPanel(
@@ -270,7 +266,29 @@ shinyUI(
                          ),
                          tabPanel("Logistic Regression"),
                          tabPanel("Linear Regression"),
-                         tabPanel("Decision Tree",plotOutput(outputId = "treeplot"),plotOutput(outputId = "pruning_plot"))))
+                         tabPanel("Decision Tree",tabsetPanel(
+                           tabPanel("params"
+                                    ,
+                                    fluidRow( 
+                                      numericInput("pruning", label = h3("Give the complexity of the model from the table (cp column) so that we could prune the tree :"), value = -1)
+                                      
+                                    ),fluidRow(
+                                      column(3,actionButton(inputId="prune_tree", label="prune models"))
+                                    )
+                           ),
+                           tabPanel("model",
+                             plotOutput(outputId = "treeplot"),
+                             plotOutput(outputId = "pruning_plot"),
+                             column(8,tableOutput(outputId = "cp_table"),offset=3)
+                           )
+                          
+                           
+                           
+                         )
+                                  
+                                  
+                                  
+                                  )))
                          )
                        
                      ),
