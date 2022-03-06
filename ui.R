@@ -196,29 +196,10 @@ shinyUI(
                    ),
                    tabPanel(
                      "Train Models",
-                       sidebarLayout(
+                       
                         
                            
-                             sidebarPanel(
-                                 fluidRow(
-                                   uiOutput("target_choices")
-                                 )
-                               ,
-                               fluidRow(
-                                 column(3,
-                                        actionButton(inputId="load_and_train_data", label="Train models"),
-                                        offset = 3
-                                 )
-                               ),fluidRow(
-
-                                 sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
-                               ),fluidRow(
-                                 textOutput(outputId="acc_pct")
-                               ),fluidRow(
-                                 radioButtons("mdl",h3("choose your model : "),choices=c("Logistic Regression","Linear Regression","Decission Tree"))
-                               )
-                             )
-                         ,mainPanel(tabsetPanel(
+                        tabsetPanel(
                          tabPanel("Balancing Method",
                                   fluidRow(
                                     column(6,
@@ -264,10 +245,88 @@ shinyUI(
                                            htmlOutput(outputId = "note_balancing_data"))
                                   )
                          ),
-                         tabPanel("Logistic Regression"),
-                         tabPanel("Linear Regression"),
+                         tabPanel("Logistic Regression",tabsetPanel(
+                           tabPanel("train model", 
+                                    
+                                    fluidRow(
+                                      uiOutput("target_choices_LOR")
+                                    )
+                                    
+                                    
+                                    ,fluidRow(
+                                      column(3,
+                                             actionButton(inputId="load_and_train_data_LOR", label="Train models"),
+                                             offset = 0
+                                      )
+                                      
+                                    ),fluidRow(
+                                      
+                                      sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
+                                      
+                                    ),
+                                    
+                                    fluidRow(
+                                      textOutput(outputId="acc_pct_LOR")
+                                    )
+                                    
+                              ),
+                           tabPanel("model params"),
+                           tabPanel("model")
+                           
+                           
+                         )),
+                         tabPanel("Linear Regression",tabsetPanel(
+                           tabPanel("train model", 
+                                    
+                                    fluidRow(
+                                      uiOutput("target_choices_LR")
+                                    )
+                                     
+                                    
+                                    ,fluidRow(
+                                       column(3,
+                                              actionButton(inputId="load_and_train_data_LR", label="Train models"),
+                                              offset = 0
+                                       )
+                                       
+                                     ),fluidRow(
+                                       
+                                       sliderInput("n_train_LR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
+                                       
+                                     ),
+                           
+                                     fluidRow(
+                                       textOutput(outputId="acc_pct_LR ")
+                                     )
+                                     
+                           ),
+                           
+                           tabPanel("model params"),
+                           tabPanel("model")
+                           
+                           
+                         )),
                          tabPanel("Decision Tree",tabsetPanel(
-                           tabPanel("params"
+                           tabPanel("train model",
+                                    
+                                    fluidRow(
+                                      uiOutput("target_choices")
+                                    )
+                                    ,
+                                    fluidRow(
+                                      column(3,
+                                             actionButton(inputId="load_and_train_data", label="Train models"),
+                                             offset = 0
+                                      )
+                                    ),fluidRow(
+                                      
+                                      sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
+                                      
+                                    ),fluidRow(
+                                      textOutput(outputId="acc_pct")
+                                    )
+                           ),
+                           tabPanel("tree pruning"
                                     ,
                                     fluidRow( 
                                       numericInput("pruning", label = h3("Give the complexity of the model from the table (cp column) so that we could prune the tree :"), value = -1)
@@ -275,6 +334,9 @@ shinyUI(
                                     ),fluidRow(
                                       column(3,actionButton(inputId="prune_tree", label="prune models"))
                                     )
+                           ),tabPanel("model params"
+                             
+                             
                            ),
                            tabPanel("model",
                              plotOutput(outputId = "treeplot"),
@@ -288,8 +350,9 @@ shinyUI(
                                   
                                   
                                   
-                                  )))
-                         )
+                                  ))
+                         
+                         
                        
                      ),
                    theme=shinytheme("cosmo"),

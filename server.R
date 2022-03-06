@@ -232,6 +232,16 @@ shinyServer(function(input, output) {
                 label = "Target Variable")
   })
   
+  output$target_choices_LR <- renderUI({
+    selectInput(inputId = "target_selected_LR", choices = names(df$data),
+                label = "Target Variable")
+  })
+  
+  output$target_choices_LOR <- renderUI({
+    selectInput(inputId = "target_selected_LOR", choices = names(df$data),
+                label = "Target Variable")
+  })
+  
   
   output$target_choices_balancing <- renderUI({
     if(!is.null(df$data)){
@@ -338,7 +348,7 @@ shinyServer(function(input, output) {
   
   observeEvent(input$load_and_train_data,{
     
-    if(input$n_train!=0 && !(is.null(df$data)) && input$mdl=="Decission Tree"){
+    if(input$n_train!=0 && !(is.null(df$data))){
       set.seed(2)
       train=sample(1:nrow(df$data),nrow(df$data)*input$n_train)
       test=-train
@@ -375,7 +385,7 @@ shinyServer(function(input, output) {
       train=sample(1:nrow(df$data),nrow(df$data)*input$n_train)
       test=-train
       
-      print("ok ;;;;")
+     
       test_data_input=df$data[test,!(names(df$data) %in% c(input$target_selected))]
       test_data_output=df$data[test, c(input$target_selected)]
       
