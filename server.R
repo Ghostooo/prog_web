@@ -357,7 +357,9 @@ shinyServer(function(input, output) {
       test_data_output=df$data[test, c(input$target_selected)]
       
       models$tree=rpart(unlist(train_data[,input$target_selected])~.,
-                        data=train_data[, !(names(df$data) %in% c(input$target_selected))])
+        maxdepth = input$max_d,
+        minsplit=input$min_s,
+        minbucket=7,data=train_data[, !(names(df$data) %in% c(input$target_selected))])
       
       
       predict.test=predict(models$tree,test_data_input,type="class")
@@ -369,7 +371,7 @@ shinyServer(function(input, output) {
       pr=models$tree$cptable
 
       output$pruning_plot=renderPlot({
-        plot(pr[,"xerror"],type="b")
+        plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="longueur de l'arbre")
       })
       
       output$cp_table=renderTable({pr})

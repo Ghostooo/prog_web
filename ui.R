@@ -310,38 +310,41 @@ shinyUI(
                            tabPanel("train model",
                                     
                                     fluidRow(
-                                      uiOutput("target_choices")
-                                    )
-                                    ,
-                                    fluidRow(
-                                      column(3,
+                                      
+                                      
+                                      column(2, 
+                                             uiOutput("target_choices"),
+                                             
+                                             numericInput("max_d", label=h3("Maxdepth"), value=30),
+                                             numericInput("min_s", label=h3("Minsplit (minimal number of objects to split)"), value=1),
+                                             numericInput("min_b", label=h3("minbucket (minimal number of observation in a leaf)"), value=1),
+                                                          
+                                                          
                                              actionButton(inputId="load_and_train_data", label="Train models"),
-                                             offset = 0
-                                      )
-                                    ),fluidRow(
-                                      
-                                      sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
-                                      
-                                    ),fluidRow(
-                                      textOutput(outputId="acc_pct")
+                                             
+                                             sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01),
+                                             
+                                             
+                                             
+                                             
+                                             
+                                             
+                                             ),
+                                      column(7,
+                                             plotOutput(outputId = "treeplot"),
+                                             plotOutput(outputId = "pruning_plot"),
+                                             
+                                             
+                                             
+                                             ),
+                                      column(3,
+                                             numericInput("pruning", label = h3("Give the complexity of the model from the table (cp column) so that we could prune the tree :"), value = -1)),
+                                             actionButton(inputId="prune_tree", label="prune models"),
+                                             tableOutput(outputId = "cp_table"),
+                                             textOutput(outputId="acc_pct")
+                                          
+                                     
                                     )
-                           ),
-                           tabPanel("tree pruning"
-                                    ,
-                                    fluidRow( 
-                                      numericInput("pruning", label = h3("Give the complexity of the model from the table (cp column) so that we could prune the tree :"), value = -1)
-                                      
-                                    ),fluidRow(
-                                      column(3,actionButton(inputId="prune_tree", label="prune models"))
-                                    )
-                           ),tabPanel("model params"
-                             
-                             
-                           ),
-                           tabPanel("model",
-                             plotOutput(outputId = "treeplot"),
-                             plotOutput(outputId = "pruning_plot"),
-                             column(8,tableOutput(outputId = "cp_table"),offset=3)
                            )
                           
                            
