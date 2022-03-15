@@ -374,6 +374,11 @@ shinyServer(function(input, output) {
         plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="longueur de l'arbre")
       })
       
+      
+
+      updateSelectInput(inputId = "pruning", choices = as.numeric(pr[,"CP"]))
+  
+      
       output$cp_table=renderTable({pr})
     }
   })

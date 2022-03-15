@@ -333,12 +333,9 @@ shinyUI(
                                       column(7,
                                              plotOutput(outputId = "treeplot"),
                                              plotOutput(outputId = "pruning_plot"),
-                                             
-                                             
-                                             
                                              ),
                                       column(3,
-                                             numericInput("pruning", label = h3("Give the complexity of the model from the table (cp column) so that we could prune the tree :"), value = -1)),
+                                             selectInput("pruning", label = h3("Give the complexity of the model from the table (cp column) so that we could prune the tree :"), choices = c())),
                                              actionButton(inputId="prune_tree", label="prune models"),
                                              tableOutput(outputId = "cp_table"),
                                              textOutput(outputId="acc_pct")
