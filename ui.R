@@ -322,7 +322,7 @@ shinyUI(
                                                           
                                              actionButton(inputId="load_and_train_data", label="Train models"),
                                              
-                                             sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01),
+                                             sliderInput("n_train", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01),
                                              
                                              
                                              
