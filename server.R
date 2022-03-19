@@ -346,6 +346,8 @@ shinyServer(function(input, output) {
   
   models = reactiveValues(tree = NULL)
   
+  # training the tree 
+  
   observeEvent(input$load_and_train_data,{
     
     if(input$n_train!=0 && !(is.null(df$data))){
@@ -369,7 +371,7 @@ shinyServer(function(input, output) {
       
       output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
       pr=models$tree$cptable
-
+  print(pr)
       output$pruning_plot=renderPlot({
         plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="longueur de l'arbre")
       })
@@ -386,6 +388,7 @@ shinyServer(function(input, output) {
   
   observeEvent(input$prune_tree,{
     if(input$pruning!=1){
+  
       models$tree=prune(models$tree, input$pruning)
       
       set.seed(2)
@@ -411,9 +414,23 @@ shinyServer(function(input, output) {
   })
   
   
+  # plot the tree 
+  
   output$treeplot=renderPlot({
-    if(!is.null(models$tree))
+    
+      
+    if(!is.null(models$tree) && length(models$tree$cptable[,"nsplit"])> 1){
+      
       fancyRpartPlot(models$tree)
+    }else{
+      
+      ggplot() +
+        annotate("text", x = 10,  y = 10,
+                 size = 6,
+                 label = "tree plot not available, possibly because the tree don't have splinted nodes or the model is not trained") + theme_void()
+      #text("")
+    }
+      
   })
   
   
@@ -532,7 +549,6 @@ shinyServer(function(input, output) {
   
   observeEvent(input$apply_balancing, {
     if(!is.null(df$data) && !is.null(df_balancing_())){
-
       df$data <- df_balancing_()
     } 
   })
