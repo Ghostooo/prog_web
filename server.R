@@ -11,6 +11,8 @@ library(rattle)
 library(misty)
 library(tree)
 library(FactoMineR)
+# for data balancing :
+library(ROSE)
 # in order to install the impute package which is not in the CRAN.
 if (!require("BiocManager"))
   install.packages("BiocManager")
@@ -25,17 +27,28 @@ shinyServer(function(input, output) {
   df = reactiveValues(data = NULL,col=c())
   
   dataset <- eventReactive(input$load_data, {
-    inFile <- input$file
-    if(is.null(inFile)) return(NULL)
     
-    if(input$file_type == "\t"){
-      data <- readxl::read_excel(inFile$datapath)
-    }else{
-      data <- read_delim(file = inFile$datapath,
-                         col_names=input$file_has_header,
-                         delim = input$file_type)
+    if(input$statlog) {
+      data <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/heart/heart.dat", header = FALSE)
+    } else {
+      inFile <- input$file
+      if(is.null(inFile)) return(NULL)
+      if(input$file_type == "\t"){
+        data <- readxl::read_excel(inFile$datapath)
+      }else{
+        if(input$file_type == " ") {
+          data <- read.table(inFile$datapath)
+        } else {
+          data <- read_delim(file = inFile$datapath,
+                             col_names=input$file_has_header,
+                             delim = input$file_type)
+        }
+        
+      }
     }
-    print(input$file_type)
+    
+    
+    # print(input$file_type)
     
     # Pre-Processing :
     
@@ -231,6 +244,15 @@ shinyServer(function(input, output) {
   })
   
   
+  output$target_choices_balancing <- renderUI({
+    if(!is.null(df$data)){
+      selectInput(inputId = "target_selected_balancing", choices = names(df$data %>% mutate_if(is.character, factor) %>%
+                                                                           select_if(~ nlevels(.) == 2)),
+                  label = "Variable to balance",
+                  width = "100%")      
+    }
+  })
+  
   # the select bar for the quantitative var to plot (as a boxplot)
   output$uni_dim_vari_choix_quant <- renderUI({
     if(!is.null(df$data)) {
@@ -363,9 +385,129 @@ shinyServer(function(input, output) {
   
   
   output$treeplot=renderPlot({
-    fancyRpartPlot(models$tree)
+    if(!null(models$tree))
+      fancyRpartPlot(models$tree)
   })
   
   
+  output$data_balancing_before <- renderPlot({
+    if(!is.null(df$data)){
+      categ_data <- df$data %>%
+        select(input$target_selected_balancing) %>%
+        ggplot() +
+        geom_bar(aes(x = unlist(df$data[, input$target_selected_balancing]), fill = unlist(df$data[, input$target_selected_balancing]))) +
+        labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$target_selected_balancing, "variable")) +
+        guides(fill = FALSE) +
+        theme_solarized()
+      categ_data
+    }
+  })
+  
+  df_balancing_ <- eventReactive(input$balancing_data_size, {
+    df_tmp <- df$data
+    df_tmp[sapply(df_tmp, is.numeric)] <- impute.knn(as.matrix(df_tmp[sapply(df_tmp, is.numeric)]))$data
+    df_tmp[sapply(df_tmp, is.factor)] <- lapply(df_tmp[sapply(df_tmp, is.factor)], addNA)
+    data_to_use <- df_tmp
+    data_balancing_formula <- as.formula(paste(input$target_selected_balancing,
+                                               paste(names(data_to_use)[!names(data_to_use) %in% c(input$target_selected_balancing)], collapse = " + "),
+                                               sep=" ~ "))
+    df_balancing <-  ROSE(data_balancing_formula,
+                          data=data_to_use,
+                          N=input$balancing_data_size,
+    )$data
+    df_balancing
+  })
+  
+  output$data_balancing_barplot <- renderPlot({
+    if(!is.null(df$data)){
+      
+      print(df_balancing_()[, input$target_selected])
+      categ_data <- df_balancing_() %>%
+        select(input$target_selected_balancing) %>%
+        ggplot() +
+        geom_bar(aes(x = unlist(df_balancing_()[, input$target_selected_balancing]), fill = unlist(df_balancing_()[, input$target_selected_balancing]))) +
+        labs(x = NULL, y = NULL, title=paste("Barplot of the ", input$target_selected_balancing, "variable")) +
+        guides(fill = FALSE) +
+        theme_solarized()
+      categ_data
+    }
+  })
+  
+  output$balancing_size <- renderUI({
+    
+    if(!is.null(df$data)){
+      n_lvl1 <- (table(df$data[, input$target_selected_balancing])[1]) %>% as.numeric()
+      n_lvl2 <- (table(df$data[, input$target_selected_balancing])[2]) %>% as.numeric()
+      if(input$balancing_choice == '1'){
+        val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
+        val <- nrow(df$data)%/%2 + val
+        m <- nrow(df$data)
+        mi <- 2
+      }else{
+        val <- abs(n_lvl1-n_lvl2) %>% as.numeric()
+        val <- nrow(df$data) + val
+        m <- nrow(df$data)*2
+        mi <- nrow(df$data)
+      }
+      sliderInput("balancing_data_size",
+                  max = m,
+                  min=mi,
+                  value=val,
+                  step = 1,
+                  animate = TRUE,
+                  label="",
+                  width = "100%"
+      )
+    }
+  })
+  
+  
+  output$explain_balancing_method <- renderText({
+    
+    if(input$balancing_choice == "1"){
+      # Under Sampling
+      text <- paste("<u><h2>Choosed: <b>Under-Sampling</b></h2></u>",
+                    "<i>This method works with majority class.",
+                    "It reduces the number of observations from majority class to make the data set balanced.",
+                    "The constant <b>N</b> represents the size of the output dataset",
+                    "so basically if you want a proportional dataset juste take (default value):",
+                    "<br><br><b>N = size_of_dataset - (size_majority_class - size_minority_class)</b><br><br>",
+                    "which means that it will undersample the size_majority until N so it will",
+                    "remove the difference between the majority and minority classes.</i>")
+    }
+
+    if(input$balancing_choice == "2"){
+      # Over Sampling
+      text <- paste("<u><h2>Choosed: <b>Over-Sampling</b></h2></u>",
+                    "<i>This method works with minority class.",
+                    "It increases the number of observations of the minority class to make the data set balanced.",
+                    "The constant <b>N</b> represents the size of the output dataset",
+                    "so basically if you want a proportional dataset juste take (default value):",
+                    "<br><br><b>N = size_of_dataset + (size_majority_class - size_minority_class)</b><br><br>",
+                    "which means that it will oversample the size_minority until N so it will",
+                    "add the difference between the majority and minority classes.</i>")
+    }
+    
+    if(input$balancing_choice == "3"){
+      # Both oversampling and undersampling
+      text <- paste("to be completed.")
+    }
+
+    return(text)
+  })
+  
+  
+  output$note_balancing_data <- renderText({
+    text <- paste('<br><br><b><u>Note:</u> the results are not fixed because of the probability of resampling from the rare class. If missing and method is either "over" or "under" this proportion is determined by oversampling or, respectively, undersampling examples so that the sample size is equal to N.</b>')
+  })
+  
+
+  
+  observeEvent(input$apply_balancing, {
+    if(!is.null(df$data) && !is.null(df_balancing_())){
+
+      df$data <- df_balancing_()
+    } 
+  })
   
 })

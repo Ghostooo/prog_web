@@ -8,8 +8,12 @@ shinyUI(
                        "Data Cleaning",
                        sidebarPanel(
                                fluidRow(
-                                    radioButtons(inputId="file_type", "Select the separation type of the data you are uploading", c(CSV=",", CSV2=";", Excel="\t")),
-                                    fileInput(inputId = "file", label = "Load a data file", accept = c(".xls", ".csv", ".xlsx"))
+                                    radioButtons(inputId="file_type", "Select the separation type of the data you are uploading", 
+                                                 c(Dat=" ", CSV=",", CSV2=";", Excel="\t")),
+                                    fileInput(inputId = "file", label = "Load a data file", accept = c(".xls", ".csv", ".xlsx", ".dat"))
+                               ),
+                               fluidRow(
+                                 checkboxInput(inputId = "statlog", label = "OR Load the Statlog(Heart) file")
                                ),
                                fluidRow(
                                    checkboxInput(inputId = "file_has_header", label = "File has header", value = TRUE)
@@ -60,7 +64,6 @@ shinyUI(
                                    "Quantitative Variables",
                                    fluidRow(
                                      column(5,
-                                            ,
                                             offset = 2)
                                    ),
                                    fluidRow(
@@ -202,15 +205,8 @@ shinyUI(
                              sidebarPanel(
                                  fluidRow(
                                    uiOutput("target_choices")
-                                 ),
-                               fluidRow(
-                                 selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
-                                             choices=list("Under Sampling" = 1,
-                                                          "Over Sampling" = 2,
-                                                          "Both" = 3,
-                                             selected = 1)
-                                )
-                               ),
+                                 )
+                               ,
                                fluidRow(
                                  numericInput("n_sample", label = h3("Sample size"), value = -1),
                                ),
@@ -230,7 +226,52 @@ shinyUI(
                                )
                              )
                          ,mainPanel(tabsetPanel(
-                         tabPanel("Logistic Regression",),
+                         tabPanel("Balancing Method",
+                                  fluidRow(
+                                    column(6,
+                                           uiOutput("target_choices_balancing"))
+                                  ),
+                                  fluidRow(
+                                    tags$i(tags$b("Only for two levels targets."))
+                                  ),
+                                  fluidRow(tags$h3(tags$u("Before balancing:"))),
+                                  fluidRow(
+                                    column(6,
+                                           plotOutput(outputId = "data_balancing_before")
+                                    ),
+                                    column(4,
+                                           fluidRow(
+                                             selectInput(inputId = "balancing_choice", label=h3("Data Balancing"),
+                                                         choices=list("Under Sampling" = 1,
+                                                                      "Over Sampling" = 2,
+                                                                      selected = 2
+                                                         )
+                                             )
+                                           ),
+                                           fluidRow(
+                                             uiOutput("balancing_size"),
+                                             tags$i("please read the description below.")
+                                           ),
+                                           fluidRow(
+                                             actionButton(inputId="apply_balancing", label="Apply On Real Data")
+                                           ),
+                                           offset = 1)
+                                  ),
+                                  fluidRow(tags$h3(tags$u("After balancing:"))),
+                                  fluidRow(
+                                         column(6,
+                                                plotOutput(outputId = "data_balancing_barplot")
+                                         )
+                                  ),
+                                  fluidRow(
+                                    column(12,
+                                           htmlOutput(outputId = "explain_balancing_method")
+                                    ),
+                                    column(12,
+                                           htmlOutput(outputId = "note_balancing_data"))
+                                  )
+                         ),
+                         tabPanel("Logistic Regression"),
                          tabPanel("Linear Regression"),
                          tabPanel("Decision Tree",plotOutput(outputId = "treeplot"),plotOutput(outputId = "pruning_plot"))))
                          )
