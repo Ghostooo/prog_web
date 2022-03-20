@@ -228,7 +228,8 @@ shinyServer(function(input, output) {
   
   # In tabSet Train Models
   output$target_choices <- renderUI({
-    selectInput(inputId = "target_selected", choices = names(df$data),
+    selectInput(inputId = "target_selected", choices = names(df$data  %>%
+                                                               select_if(is.factor) ),
                 label = "Target Variable")
   })
   
