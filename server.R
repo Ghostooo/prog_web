@@ -27,17 +27,28 @@ shinyServer(function(input, output) {
   df = reactiveValues(data = NULL,col=c())
   
   dataset <- eventReactive(input$load_data, {
-    inFile <- input$file
-    if(is.null(inFile)) return(NULL)
     
-    if(input$file_type == "\t"){
-      data <- readxl::read_excel(inFile$datapath)
-    }else{
-      data <- read_delim(file = inFile$datapath,
-                         col_names=input$file_has_header,
-                         delim = input$file_type)
+    if(input$statlog) {
+      data <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/heart/heart.dat", header = FALSE)
+    } else {
+      inFile <- input$file
+      if(is.null(inFile)) return(NULL)
+      if(input$file_type == "\t"){
+        data <- readxl::read_excel(inFile$datapath)
+      }else{
+        if(input$file_type == " ") {
+          data <- read.table(inFile$datapath)
+        } else {
+          data <- read_delim(file = inFile$datapath,
+                             col_names=input$file_has_header,
+                             delim = input$file_type)
+        }
+        
+      }
     }
-    print(input$file_type)
+    
+    
+    # print(input$file_type)
     
     # Pre-Processing :
     

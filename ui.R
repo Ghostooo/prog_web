@@ -8,8 +8,12 @@ shinyUI(
                        "Data Cleaning",
                        sidebarPanel(
                                fluidRow(
-                                    radioButtons(inputId="file_type", "Select the separation type of the data you are uploading", c(CSV=",", CSV2=";", Excel="\t")),
-                                    fileInput(inputId = "file", label = "Load a data file", accept = c(".xls", ".csv", ".xlsx"))
+                                    radioButtons(inputId="file_type", "Select the separation type of the data you are uploading", 
+                                                 c(Dat=" ", CSV=",", CSV2=";", Excel="\t")),
+                                    fileInput(inputId = "file", label = "Load a data file", accept = c(".xls", ".csv", ".xlsx", ".dat"))
+                               ),
+                               fluidRow(
+                                 checkboxInput(inputId = "statlog", label = "OR Load the Statlog(Heart) file")
                                ),
                                fluidRow(
                                    checkboxInput(inputId = "file_has_header", label = "File has header", value = TRUE)
@@ -60,7 +64,6 @@ shinyUI(
                                    "Quantitative Variables",
                                    fluidRow(
                                      column(5,
-                                            ,
                                             offset = 2)
                                    ),
                                    fluidRow(
