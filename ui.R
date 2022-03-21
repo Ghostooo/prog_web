@@ -109,7 +109,7 @@ shinyUI(
                                    ),
                                   fluidRow(
                                     tagList(tags$i("Fix the positive constant k to define outliers according to"),
-                                            a('this method',
+                                            tags$a('this method',
                                               href = "https://fr.wikipedia.org/wiki/Donn%C3%A9e_aberrante#Autres_appr%C3%A9ciations_de_la_variabilit%C3%A9"),
                                             tags$i('(replace with mean).'))
                                   ),
