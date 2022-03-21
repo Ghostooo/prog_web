@@ -19,6 +19,7 @@ if (!require("BiocManager"))
 if(!require("impute", quietly = TRUE))
   BiocManager::install("impute")
 library(impute)
+library(ggcorrplot)
 # ----------------------------------------------------------------
 
 
@@ -37,8 +38,7 @@ shinyServer(function(input, output) {
                          col_names=input$file_has_header,
                          delim = input$file_type)
     }
-    print(input$file_type)
-    
+
     # Pre-Processing :
     
     # transform string data into factors
@@ -63,13 +63,11 @@ shinyServer(function(input, output) {
     ### Scaling & Centering
     sc = "1" %in% input$pre_pros
     cn = "2" %in% input$pre_pros
-    print(sc)
-    print(cn)
+
     data[sapply(data, is.numeric)] <- scale(data[sapply(data, is.numeric)], center=cn, scale=sc)
     
     if("4" %in% input$pre_pros){
       data[sapply(data, is.numeric)] <- sapply(data[sapply(data, is.numeric)], remove_outliers)
-      print("outliers replaced")
     }
     
     
@@ -357,8 +355,7 @@ shinyServer(function(input, output) {
       
       output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
       pr=models$tree$cptable
-      print("yes")
-      print(pr)
+
       output$pruning_plot=renderPlot({
         plot(pr[,"xerror"],type="b")
       })
@@ -410,7 +407,6 @@ shinyServer(function(input, output) {
   output$data_balancing_barplot <- renderPlot({
     if(!is.null(df$data)){
       
-      print(df_balancing_()[, input$target_selected])
       categ_data <- df_balancing_() %>%
         select(input$target_selected_balancing) %>%
         ggplot() +
@@ -497,6 +493,15 @@ shinyServer(function(input, output) {
 
       df$data <- df_balancing_()
     } 
+  })
+  
+  
+  output$corr_matrix <- renderPlot({
+    if(!is.null(df$data)){
+      Correlation <- cor(df$data %>% select_if(is.numeric))
+      ggcorrplot(Correlation, lab=TRUE, title="",
+                 legend.title = "Correlation")      
+    }
   })
   
 })
