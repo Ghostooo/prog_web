@@ -228,10 +228,11 @@ shinyServer(function(input, output) {
   
   # In tabSet Train Models
   output$target_choices <- renderUI({
+    if(!is.null(df$data)){
     selectInput(inputId = "target_selected", choices = names(df$data  %>%
                                                                select_if(is.factor) ),
                 label = "Target Variable")
-  })
+  }})
   
   output$target_choices_LR <- renderUI({
     selectInput(inputId = "target_selected_LR", choices = names(df$data),
@@ -374,7 +375,7 @@ shinyServer(function(input, output) {
       pr=models$tree$cptable
   print(pr)
       output$pruning_plot=renderPlot({
-        plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="longueur de l'arbre")
+        plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="nombre de noeud dans l'arbre")
       })
       
       
@@ -388,7 +389,7 @@ shinyServer(function(input, output) {
   
   
   observeEvent(input$prune_tree,{
-    if(input$pruning!=1){
+    if(input$pruning!=1 & !is.null(models$tree)){
   
       models$tree=prune(models$tree, input$pruning)
       
