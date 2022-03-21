@@ -205,8 +205,8 @@ shinyUI(
                                    align = "center",
                                    tags$h2(tags$b("Correlation matrix of the numeric variables")),
                                    plotOutput("corr_matrix",
-                                              width = "900px",
-                                              height = "900px")
+                                              width = "700px",
+                                              height = "700px")
                                           )
                    ),
                    tabPanel(
