@@ -373,7 +373,7 @@ shinyServer(function(input, output) {
       
       output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
       pr=models$tree$cptable
-  print(pr)
+
       output$pruning_plot=renderPlot({
         plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="nombre de noeud dans l'arbre")
       })
