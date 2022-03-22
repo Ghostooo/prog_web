@@ -226,7 +226,19 @@ shinyServer(function(input, output) {
   
   # In tabSet Train Models
   output$target_choices <- renderUI({
-    selectInput(inputId = "target_selected", choices = names(df$data),
+    if(!is.null(df$data)){
+    selectInput(inputId = "target_selected", choices = names(df$data  %>%
+                                                               select_if(is.factor) ),
+                label = "Target Variable")
+  }})
+  
+  output$target_choices_LR <- renderUI({
+    selectInput(inputId = "target_selected_LR", choices = names(df$data),
+                label = "Target Variable")
+  })
+  
+  output$target_choices_LOR <- renderUI({
+    selectInput(inputId = "target_selected_LOR", choices = names(df$data),
                 label = "Target Variable")
   })
   
@@ -334,9 +346,11 @@ shinyServer(function(input, output) {
   
   models = reactiveValues(tree = NULL)
   
+  # training the tree 
+  
   observeEvent(input$load_and_train_data,{
     
-    if(input$n_train!=0){
+    if(input$n_train!=0 && !(is.null(df$data))){
       set.seed(2)
       train=sample(1:nrow(df$data),nrow(df$data)*input$n_train)
       test=-train
@@ -345,7 +359,9 @@ shinyServer(function(input, output) {
       test_data_output=df$data[test, c(input$target_selected)]
       
       models$tree=rpart(unlist(train_data[,input$target_selected])~.,
-                        data=train_data[, !(names(df$data) %in% c(input$target_selected))])
+        maxdepth = input$max_d,
+        minsplit=input$min_s,
+        minbucket=7,data=train_data[, !(names(df$data) %in% c(input$target_selected))])
       
       
       predict.test=predict(models$tree,test_data_input,type="class")
@@ -357,22 +373,64 @@ shinyServer(function(input, output) {
       pr=models$tree$cptable
 
       output$pruning_plot=renderPlot({
-        plot(pr[,"xerror"],type="b")
+        plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="nombre de noeud dans l'arbre")
       })
+      
+      
+
+      updateSelectInput(inputId = "pruning", choices = as.numeric(pr[,"CP"]))
+  
+      
+      output$cp_table=renderTable({pr})
     }
   })
   
   
   observeEvent(input$prune_tree,{
-    if(input$prune_tree!=-1){
-      #models$tree=
+    if(input$pruning!=1 & !is.null(models$tree)){
+  
+      models$tree=prune(models$tree, input$pruning)
+      
+      set.seed(2)
+      train=sample(1:nrow(df$data),nrow(df$data)*input$n_train)
+      test=-train
+      
+     
+      test_data_input=df$data[test,!(names(df$data) %in% c(input$target_selected))]
+      test_data_output=df$data[test, c(input$target_selected)]
+      
+      
+      predict.test=predict(models$tree,test_data_input,type="class")
+      predict.test=as.character(predict.test)
+      
+      test_data_output=as.character(unlist(test_data_output))
+      
+      
+      output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
+      
+      
+      
     }
   })
   
   
+  # plot the tree 
+  
   output$treeplot=renderPlot({
-    if(!null(models$tree))
+    
+      
+    if(!is.null(models$tree) && length(models$tree$cptable[,"nsplit"])> 1){
+      
       fancyRpartPlot(models$tree)
+    }else{
+      
+      ggplot() +
+        annotate("text", x = 10,  y = 10,
+                 size = 6,
+                 label = "tree plot not available, possibly because the tree don't have splinted nodes or the model is not trained") + theme_void()
+      #text("")
+    }
+      
   })
   
   
@@ -490,7 +548,6 @@ shinyServer(function(input, output) {
   
   observeEvent(input$apply_balancing, {
     if(!is.null(df$data) && !is.null(df_balancing_())){
-
       df$data <- df_balancing_()
     } 
   })
