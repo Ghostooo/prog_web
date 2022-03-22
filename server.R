@@ -30,6 +30,13 @@ shinyServer(function(input, output) {
     
     if(input$statlog) {
       data <- read.table("https://archive.ics.uci.edu/ml/machine-learning-databases/statlog/heart/heart.dat", header = FALSE)
+      names(data) = c("age", "sex", "chest pain type", "resting blood pressure",
+                         "serum cholesterol in mg/dl", "fasting blood sugar > 120 mg/dl", "resting electrocardiographic results",
+                         "maximum heart rate achieved", "exercice induced angina", 
+                         "oldpeak = ST depression induced by exercice relative to rest",
+                         "the slope of the peak exercice ST segment",
+                         "number of major vessels (0-3) colored by flourosopy",
+                         "thal: 3 = normal; 6 = fixed defect; 7 = reversable defect", "Absence")
     } else {
       inFile <- input$file
       if(is.null(inFile)) return(NULL)
