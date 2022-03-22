@@ -1,14 +1,20 @@
 library(shiny)
 library(shinythemes)
 
+library(shinyjs)
+library(shinyWidgets)
+
 # Define UI for application that draws a histogram
 shinyUI(
         navbarPage("Dashboard",
                    tabPanel(
                        "Data Cleaning",
                        sidebarPanel(
+                         tags$h1(tags$b(tags$u("Customize your Pipeline", icon("fa-thin fa-filter")))),
+                         useShinyjs(),
+                         panel(style = "overflow-y:scroll; height: 500px; position:relative; align: centre; #load_data{ background-color:'red' }",
                                fluidRow(
-                                    radioButtons(inputId="file_type", "Select the separation type of the data you are uploading", c(CSV=",", CSV2=";", Excel="\t")),
+                                    radioButtons(inputId="file_type", tags$i("Data file separator"), c(CSV=",", CSV2=";", Excel="\t")),
                                     fileInput(inputId = "file", label = "Load a data file", accept = c(".xls", ".csv", ".xlsx"))
                                ),
                                fluidRow(
@@ -33,16 +39,6 @@ shinyUI(
                                                                         "Replace Outiliers with mean (more on Data Visualization)" = 4))
                                 ),
                                fluidRow(
-                                    numericInput("n_sample", label = h3("Sample size"), value = -1),
-                               ),
-                               fluidRow(
-                                   column(3,
-                                          actionButton(inputId="load_data", label="Load Dataset"),
-                                          offset = 3
-                                          )
-    
-                               ),
-                               fluidRow(
                                  selectInput(inputId="col_name", label = h3("choose a column to show or to delete"),choices = c(""),multiple = TRUE)
                                ),
                                fluidRow(
@@ -54,19 +50,25 @@ shinyUI(
                                  textOutput(outputId="na_pct")
                                )
                        ),
+                       fluidRow(
+                         column(3,
+                                actionButton(inputId="load_data", label="Load Dataset",
+                                             icon("fa-thin fa-database"), 
+                                             style="color: #fff; background-color: #337ab7; border-color: #2e6da4; box-shadow: 2px 2px 2px 2px black;"),
+                                offset = 3
+                         )
+                       )
+                       ),
                        mainPanel(
                            tabsetPanel(
                                tabPanel(
                                    "Quantitative Variables",
                                    fluidRow(
-                                     column(5,
-                                            ,
+                                     useShinyjs(),
+                                     column(8,
+                                            panel(style = "overflow-y:scroll; height: 700px; position:relative; align: centre",
+                                                  tableOutput(outputId = "quant_table")),
                                             offset = 2)
-                                   ),
-                                   fluidRow(
-                                       column(8,
-                                              tableOutput(outputId = "quant_table"),
-                                              offset = 2)
                                    )
                                ),
                                # change style:    
@@ -74,9 +76,11 @@ shinyUI(
                                tabPanel(
                                    "Categorical Variables",
                                    fluidRow(
-                                       column(8,
-                                              tableOutput(outputId = "cat_table"),
-                                              offset = 2)
+                                     useShinyjs(),
+                                     column(8,
+                                            panel(style = "overflow-y:scroll; height: 700px; position:relative; align: centre",
+                                                  tableOutput(outputId = "cat_table")),
+                                            offset = 2)
                                    )
                                ),
                                # change style:    
@@ -84,8 +88,10 @@ shinyUI(
                                tabPanel(
                                  "choosen variable",
                                  fluidRow(
+                                   useShinyjs(),
                                    column(8,
-                                          tableOutput(outputId = "one_table"),
+                                          panel(style = "overflow-y:scroll; height: 700px; position:relative; align: centre",
+                                            tableOutput(outputId = "one_table")),
                                           offset = 1)
                                  )
                                ),
@@ -109,7 +115,7 @@ shinyUI(
                                    ),
                                   fluidRow(
                                     tagList(tags$i("Fix the positive constant k to define outliers according to"),
-                                            a('this method',
+                                            tags$a('this method',
                                               href = "https://fr.wikipedia.org/wiki/Donn%C3%A9e_aberrante#Autres_appr%C3%A9ciations_de_la_variabilit%C3%A9"),
                                             tags$i('(replace with mean).'))
                                   ),
@@ -191,8 +197,17 @@ shinyUI(
                                     tabPanel("Boites Parallèles")
                                   )  
                               )
-                      )
+                      ),
                      )
+                   ),
+                   tabPanel("Correlation Matrix",
+                            column(12,
+                                   align = "center",
+                                   tags$h2(tags$b("Correlation matrix of the numeric variables")),
+                                   plotOutput("corr_matrix",
+                                              width = "700px",
+                                              height = "700px")
+                                          )
                    ),
                    tabPanel(
                      "Train Models",
