@@ -1,0 +1,26 @@
+{
+    "id": "B611F109",
+    "path": "~/Documents/M1/prog-web/prog_web/server.R",
+    "project_path": "server.R",
+    "type": "r_source",
+    "hash": "3421360356",
+    "contents": "",
+    "dirty": false,
+    "created": 1647981577425.0,
+    "source_on_save": false,
+    "relative_order": 2,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "513,0",
+        "scrollLine": "473"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1647982861,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1647982861448,
+    "read_only": false,
+    "read_only_alternatives": []
+}
