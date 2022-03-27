@@ -238,7 +238,7 @@ shinyServer(function(input, output) {
   })
   
   output$target_choices_LOR <- renderUI({
-    selectInput(inputId = "target_selected_LOR", choices = names(df$data),
+    selectInput(inputId = "target_selected_LOR", choices = names(df$data %>% select_if(is.factor)),
                 label = "Target Variable")
   })
   
@@ -602,5 +602,34 @@ shinyServer(function(input, output) {
     }
   })
   
+  observeEvent(input$load_and_train_data_LOR,{
+    
+    if(input$n_train_LOR!=0 && !(is.null(df$data))){
+      data.LOR <- df$data
+      
+      
+      data.LOR[sapply(data.LOR, is.character)] <- lapply(data.LOR[sapply(data.LOR, is.character)], 
+                                             as.factor)
+      set.seed(2)
+      train=sample(1:nrow(data.LOR), nrow(data.LOR)*input$n_train_LOR)
+      test=-train
+      train_data=data.LOR[train, !(names(data.LOR) %in% c(input$target_selected_LOR))]
+      # View(train_data)
+      test_data_input=data.LOR[test, !(names(data.LOR) %in% c(input$target_selected_LOR))]
+      test_data_output=data.LOR[test, c(input$target_selected_LOR)]
+      print(input$target_selected_LOR %in% names(train_data))
+      model.LOR <- glm(unlist(data.LOR[train, input$target_selected_LOR]) ~ ., 
+                       family="binomial", data=train_data)
+      
+      output$LOR_model <- renderTable({
+        summary(model.LOR)$coefficients
+      })
+      
+      output$LOR_metrics <- renderText({
+        c("Dispersion : ", summary(model.LOR)$dispersion)
+      })
+      
+    }
+  })
   
 })

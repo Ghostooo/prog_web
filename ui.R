@@ -262,34 +262,21 @@ shinyUI(
                          ),
                          tabPanel("Logistic Regression",tabsetPanel(
                            tabPanel("train model", 
-                                    
-                                    fluidRow(
-                                      uiOutput("target_choices_LOR")
-                                    )
-                                    
-                                    
-                                    ,fluidRow(
-                                      column(3,
-                                             actionButton(inputId="load_and_train_data_LOR", label="Train models"),
-                                             offset = 0
+                                      fluidRow(
+                                        column(2,
+                                               uiOutput("target_choices_LOR"),
+                                               sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01),
+                                               actionButton(inputId="load_and_train_data_LOR", label="Train models")),
+                                        column(7,
+                                               tableOutput("LOR_model")
+                                        ),
+                                        column(3,
+                                               htmlOutput("LOR_metrics"),
+                                               textOutput(outputId="acc_pct_LOR"))
                                       )
-                                      
-                                    ),fluidRow(
-                                      
-                                      sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
-                                      
-                                    ),
-                                    
-                                    fluidRow(
-                                      textOutput(outputId="acc_pct_LOR")
                                     )
-                                    
-                              ),
-                           tabPanel("model params"),
-                           tabPanel("model")
-                           
-                           
-                         )),
+                              )
+                         ),
                          tabPanel("Linear Regression",tabsetPanel(
                            tabPanel("train model",
                                   fluidRow(
