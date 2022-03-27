@@ -211,8 +211,6 @@ shinyUI(
                    ),
                    tabPanel(
                      "Train Models",
-                       
-                        
                            
                         tabsetPanel(
                          tabPanel("Balancing Method",
@@ -264,19 +262,21 @@ shinyUI(
                            tabPanel("train model", 
                                     
                                     fluidRow(
-                                      uiOutput("target_choices_LOR")
+                                      uiOutput("target_choices_LOR", align="left"),
+                                      column(10, align="right", tableOutput("LOR_model"))
+    
                                     )
-                                    
                                     
                                     ,fluidRow(
                                       column(3,
                                              actionButton(inputId="load_and_train_data_LOR", label="Train models"),
                                              offset = 0
-                                      )
+                                      ),
+                                      column(6, uiOutput("LOR_metrics"))
                                       
                                     ),fluidRow(
                                       
-                                      sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
+                                      sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01)
                                       
                                     ),
                                     
@@ -294,25 +294,40 @@ shinyUI(
                            tabPanel("train model", 
                                     
                                     fluidRow(
-                                      uiOutput("target_choices_LR")
-                                    )
+                                      uiOutput(align="left", "target_choices_LR"),
+                                    ),
+                                    fluidRow(
+                                      
+                                      column(3,
+                                             actionButton(inputId="load_and_train_data_LR", label="Train models"),
+                                             offset = 0
+                                      )
+                                      
+                                    ),fluidRow(
+                                      
+                                      sliderInput("n_train_LR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01)
+                                      
+                                    ),
+                                    
+                                    fluidRow(
+                                      textOutput(outputId="acc_pct_LR ")
+                                    ),
+                                    
+                                    fluidRow(
+                                      column(6, align="left", tableOutput("LR_model")),
+                                      column(6, align="right", tableOutput("LR_step_model"))
+                                    ),
                                      
                                     
-                                    ,fluidRow(
-                                       column(3,
-                                              actionButton(inputId="load_and_train_data_LR", label="Train models"),
-                                              offset = 0
-                                       )
-                                       
-                                     ),fluidRow(
-                                       
-                                       sliderInput("n_train_LR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
-                                       
-                                     ),
-                           
-                                     fluidRow(
-                                       textOutput(outputId="acc_pct_LR ")
-                                     )
+                                    fluidRow(
+                                      column(6, align="left", uiOutput("LR_metrics")),
+                                      column(6, align="right", uiOutput("LR_step_metrics"))
+                                    ),
+                                    
+                                    fluidRow(
+                                      column(6, tableOutput("LR_step"))
+                                    )
+                                    
                                      
                            ),
                            

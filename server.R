@@ -8,6 +8,11 @@ library(outliers)
 library(rpart)
 source("functions.R")
 library(rattle)
+library(caret)
+library(MASS)
+library(sjPlot)
+library(sjmisc)
+library(sjlabelled)
 library(misty)
 library(tree)
 library(FactoMineR)
@@ -233,12 +238,12 @@ shinyServer(function(input, output) {
   }})
   
   output$target_choices_LR <- renderUI({
-    selectInput(inputId = "target_selected_LR", choices = names(df$data),
+    selectInput(inputId = "target_selected_LR", choices = names(df$data %>% select_if(is.numeric)),
                 label = "Target Variable")
   })
   
   output$target_choices_LOR <- renderUI({
-    selectInput(inputId = "target_selected_LOR", choices = names(df$data),
+    selectInput(inputId = "target_selected_LOR", choices = names(df$data %>% select_if(is.factor)),
                 label = "Target Variable")
   })
   
@@ -251,6 +256,92 @@ shinyServer(function(input, output) {
                   width = "100%")      
     }
   })
+  
+  
+  observeEvent(input$load_and_train_data_LR,{
+    
+    if(input$n_train_LR!=0 && !(is.null(df$data))){
+      data.LR <- df$data %>% select_if(is.numeric)
+      
+      set.seed(2)
+      train=sample(1:nrow(data.LR), nrow(data.LR)*input$n_train_LR)
+      test=-train
+      train_data=data.LR[train, !(names(data.LR) %in% c(input$target_selected_LR))]
+      # View(train_data)
+      test_data_input=data.LR[test, !(names(data.LR) %in% c(input$target_selected_LR))]
+      test_data_output=data.LR[test, c(input$target_selected_LR)]
+      
+      model.LR <- lm(unlist(data.LR[train, input$target_selected_LR]) ~ ., data=train_data)
+      
+      sum_model_LR <- summary(model.LR)
+      
+      output$LR_model <- renderTable({
+        data.frame(Feature=names(coefficients(model.LR)), sum_model_LR$coefficients)
+      })
+      
+      output$LR_metrics <- renderTable({
+        data.frame("R squared" = sum_model_LR$r.squared, "R adjusted square" = sum_model_LR$adj.r.squared)
+      })
+      
+      step_lm <- stepAIC(model.LR, direction="both")
+      
+      
+      # output$LR_step <- renderTable({
+      #   
+      #   # on a vector
+      #   # create an empty vector of zeros
+      #   STEP_COEF = vector("numeric",length(coefficients(model.LR)))
+      #   #same names
+      #   names(STEP_COEF) = names(coefficients(model.LR))
+      #   #fill in the ones found in step
+      #   STEP_COEF[names(coefficients(step_lm))] = as.numeric(coefficients(step_lm))
+      #   data.frame(names(coefficients(step_lm)), STEP_COEF[names(coefficients(step_lm))])
+      # })
+      
+      train.var <- names(coefficients(step_lm))[!(names(coefficients(step_lm)) %in% "(Intercept)")]
+      
+      model.adjusted.LR <- lm(unlist(data.LR[train, input$target_selected_LR]) ~ ., data=train_data[, train.var])
+      
+      sum_step_model_LR <- summary(model.adjusted.LR)
+      
+      output$LR_step_model <- renderTable({
+        data.frame(Feature=names(coefficients(step_lm)),sum_step_model_LR$coefficients)
+      })
+      
+      output$LR_step_metrics <- renderTable({
+        data.frame("R squared" = sum_step_model_LR$r.squared, "R adjusted square" = sum_step_model_LR$adj.r.squared)
+      })
+    }
+  })
+  
+  observeEvent(input$load_and_train_data_LOR,{
+    
+    if(input$n_train_LOR!=0 && !(is.null(df$data))){
+      data.LOR <- df$data
+      
+      set.seed(2)
+      train=sample(1:nrow(data.LOR), nrow(data.LOR)*input$n_train_LOR)
+      test=-train
+      train_data=data.LOR[train, !(names(data.LOR) %in% c(input$target_selected_LOR))]
+      # View(train_data)
+      test_data_input=data.LOR[test, !(names(data.LOR) %in% c(input$target_selected_LOR))]
+      test_data_output=data.LOR[test, c(input$target_selected_LOR)]
+      print(input$target_selected_LOR %in% names(train_data))
+      model.LOR <- glm(unlist(data.LOR[train, input$target_selected_LOR]) ~ ., 
+                      family="binomial", data=train_data)
+      
+      output$LOR_model <- renderTable({
+        summary(model.LOR)$coefficients
+      })
+      
+      output$LOR_metrics <- renderTable({
+        c("Dispersion : ", summary(model.LOR)$dispersion)
+      })
+      
+    }
+  })
+  
+  
   
   # the select bar for the quantitative var to plot (as a boxplot)
   output$uni_dim_vari_choix_quant <- renderUI({
