@@ -626,10 +626,28 @@ shinyServer(function(input, output) {
       })
       
       output$LOR_metrics <- renderText({
-        c("Dispersion : ", summary(model.LOR)$dispersion)
+        c("<u>Dispersion :</u> ", summary(model.LOR)$dispersion, "<br><br>")
+      })
+      
+      
+      output$residuals_LR <- renderText({
+        paste(
+          "<h2>Residuals distribution: </h2>",
+          "<div style='border: 1px solid black;'>",
+          "<u><b>Q1: </b></u>", quantile(model.LOR$residuals)[[1]],
+          "<br>",
+          "<u><b>Q2: </b></u>", quantile(model.LOR$residuals)[[2]],
+          "<br>",
+          "<u><b>Median (Q3): </b></u>", quantile(model.LOR$residuals)[[3]],
+          "<br>",
+          "<u><b>Q4: </b></u>", quantile(model.LOR$residuals)[[4]],
+          "</div>")
       })
       
     }
   })
+  
+  
+
   
 })

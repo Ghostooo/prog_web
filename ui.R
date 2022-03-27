@@ -265,14 +265,19 @@ shinyUI(
                                       fluidRow(
                                         column(2,
                                                uiOutput("target_choices_LOR"),
-                                               sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01),
+                                               sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01),
                                                actionButton(inputId="load_and_train_data_LOR", label="Train models")),
                                         column(7,
-                                               tableOutput("LOR_model")
+                                               align="center",
+                                               tags$div(
+                                                 tableOutput("LOR_model"),
+                                                 style="border: 1px solid black; box-shadow: 10px 5px 2px black; background-color: #f7e9d4;"
+                                               )
                                         ),
                                         column(3,
                                                htmlOutput("LOR_metrics"),
-                                               textOutput(outputId="acc_pct_LOR"))
+                                               textOutput(outputId="acc_pct_LOR"),
+                                               htmlOutput("residuals_LR"))
                                       )
                                     )
                               )
@@ -285,7 +290,11 @@ shinyUI(
                                             sliderInput("n_train_lr", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01),
                                             actionButton("train_lr", label="Train Model")),
                                      column(7,
-                                            htmlOutput("LR_model")),
+                                            align="center",
+                                            tags$div(
+                                              tableOutput("LR_model"),
+                                              style="border: 1px solid black; box-shadow: 10px 5px 2px black; background-color: #f7e9d4;"
+                                              )),
                                      column(3,
                                             tags$h3(tags$u("Some metrics :")),
                                             htmlOutput("LR_metrics"))
