@@ -39,7 +39,7 @@ shinyUI(
                                                                         "Replace Outiliers with mean (more on Data Visualization)" = 4))
                                 ),
                                fluidRow(
-                                 selectInput(inputId="col_name", label = h3("choose a column to show or to delete"),choices = c(""),multiple = TRUE)
+                                 selectInput(inputId="col_name", label = h3("choose a column to show or to delete"), choices = c(""), multiple = TRUE)
                                ),
                                fluidRow(
                                  column(3,
@@ -194,7 +194,11 @@ shinyUI(
                                         )
                                       )
                                     ),
-                                    tabPanel("Boites Parallèles")
+                                    tabPanel("Boites Parallèles",
+                                             fluidRow(
+                                               column(6, offset=2,
+                                                      plotOutput(outputId = "box"))
+                                             ))
                                   )  
                               )
                       ),
@@ -211,8 +215,6 @@ shinyUI(
                    ),
                    tabPanel(
                      "Train Models",
-                       
-                        
                            
                         tabsetPanel(
                          tabPanel("Balancing Method",
@@ -266,6 +268,7 @@ shinyUI(
                                         column(2,
                                                uiOutput("target_choices_LOR"),
                                                sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01),
+                                               uiOutput("features_selected_lor_ui"),
                                                actionButton(inputId="load_and_train_data_LOR", label="Train models")),
                                         column(7,
                                                align="center",
@@ -277,7 +280,7 @@ shinyUI(
                                         column(3,
                                                htmlOutput("LOR_metrics"),
                                                textOutput(outputId="acc_pct_LOR"),
-                                               htmlOutput("residuals_LR"))
+                                               htmlOutput("residuals_LOR"))
                                       )
                                     )
                               )
@@ -288,6 +291,7 @@ shinyUI(
                                      column(2,
                                             uiOutput("target_selected_lr_ui"),
                                             sliderInput("n_train_lr", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01),
+                                            uiOutput("features_selected_lr_ui"),
                                             actionButton("train_lr", label="Train Model")),
                                      column(7,
                                             align="center",
@@ -298,7 +302,20 @@ shinyUI(
                                      column(3,
                                             tags$h3(tags$u("Some metrics :")),
                                             htmlOutput("LR_metrics"))
-                           )
+                                  ),
+                                  fluidRow(
+                                    
+                                    column(7,
+                                           align="center",
+                                           offset=2,
+                                           tags$div(
+                                             tableOutput("LR_step_model"),
+                                             style="border: 1px solid black; box-shadow: 10px 5px 2px black; background-color: #f7e9d4;"
+                                           )),
+                                    column(3,
+                                           tags$h3(tags$u("Some metrics :")),
+                                           htmlOutput("LR_step_metrics"))
+                                  )
                          ))),
                          tabPanel("Decision Tree",tabsetPanel(
                            tabPanel("train model",

@@ -10,6 +10,7 @@ source("functions.R")
 library(rattle)
 library(misty)
 library(tree)
+library(MASS, include.only = 'stepAIC')
 library(FactoMineR)
 # for data balancing :
 library(ROSE)
@@ -205,6 +206,23 @@ shinyServer(function(input, output) {
       barplot(-out$left, col="red", horiz=TRUE, space=0, add=TRUE, axes=FALSE)
       barplot(out$right, col="blue", horiz=TRUE, space=0, add=TRUE, axes=FALSE)
     }
+  })
+  
+  output$box <- renderPlot({
+    
+    if(!is.null(df$data)) {
+      x.var = input$bi.dim.choice.1.vizu.quant
+      y.var = input$bi.dim.choice.2.vizu.quant
+      
+      data.x = unlist(df$data[, x.var])
+      data.y = unlist(df$data[, y.var])
+      
+      
+      qplot(x=data.x, y=data.y, xlab=x.var, ylab=y.var,
+            geom=c("boxplot", "jitter"), fill=data.x) +
+        theme(legend.title=element_blank())
+    }
+    
   })
   
   # Calcul et affichage du coefficient de corélation linéaire
@@ -569,9 +587,33 @@ shinyServer(function(input, output) {
     }
   })
   
+  output$features_selected_lr_ui <- renderUI({
+    if(!is.null(df$data)){
+      selectInput("features_selected_lr",
+                  label = h3("Choose features to train with"), 
+                  multiple = TRUE,
+                  choices = names(df$data))      
+    }
+  })
+  
+  output$features_selected_lor_ui <- renderUI({
+    if(!is.null(df$data)){
+      selectInput("features_selected_lor",
+                  label = h3("Choose features to train with"), 
+                  multiple = TRUE,
+                  choices = names(df$data))      
+    }
+  })
+  
   observeEvent(input$train_lr, {
     if(!is.null(df$data)){
-      data.LR <- df$data
+      if(is.null(input$features_selected_lr)) {
+        data.LR <- df$data
+      } else {
+        print(input$features_selected_lr)
+        data.LR <- df$data[, c(input$target_selected_lr, input$features_selected_lr)]
+      }
+      
       
       set.seed(2)
       train=sample(1:nrow(data.LR), nrow(data.LR)*input$n_train_lr)
@@ -598,14 +640,43 @@ shinyServer(function(input, output) {
               collapse = " ")
       })
       
-      #step_lm <- stepAIC(model.LR, direction="both")
+      # Application of a step Regression
+      
+      step_lm <- stepAIC(model.LR, direction="both")
+
+      train.var <- names(coefficients(step_lm))[!(names(coefficients(step_lm)) %in% "(Intercept)")]
+
+      # model.adjusted.LR <- lm(unlist(data.LR[train, input$target_selected_lr]) ~ ., data=train_data[, train.var])
+      # 
+      sum_step_model_LR <- summary(step_lm)
+
+      output$LR_step_model <- renderTable({
+        temp <- data.frame(Feature=names(coefficients(step_lm)), sum_step_model_LR$coefficients)
+
+        names(temp) <- c("Feature", "Coefficient", "Standard Error",
+                         "t-Value", "p-Value")
+        temp
+      })
+
+      output$LR_step_metrics <- renderText({
+          paste("<u>R² : </u> <b>", sum_step_model_LR$r.squared,"</b><br><br>",
+                "<u>Adjusted R² : </u> <b>", sum_step_model_LR$adj.r.squared,"</b>\n",
+                collapse = " ")
+      })
+      
+      
     }
   })
   
   observeEvent(input$load_and_train_data_LOR,{
     
     if(input$n_train_LOR!=0 && !(is.null(df$data))){
-      data.LOR <- df$data
+      
+      if(is.null(input$features_selected_lor)) {
+        data.LOR <- df$data
+      } else {
+        data.LOR <- df$data[, c(input$target_selected_LOR, input$features_selected_lor)]
+      }
       
       
       data.LOR[sapply(data.LOR, is.character)] <- lapply(data.LOR[sapply(data.LOR, is.character)], 
@@ -630,7 +701,7 @@ shinyServer(function(input, output) {
       })
       
       
-      output$residuals_LR <- renderText({
+      output$residuals_LOR <- renderText({
         paste(
           "<h2>Residuals distribution: </h2>",
           "<div style='border: 1px solid black;'>",
