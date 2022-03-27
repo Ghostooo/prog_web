@@ -291,36 +291,19 @@ shinyUI(
                            
                          )),
                          tabPanel("Linear Regression",tabsetPanel(
-                           tabPanel("train model", 
-                                    
-                                    fluidRow(
-                                      uiOutput("target_choices_LR")
-                                    )
-                                     
-                                    
-                                    ,fluidRow(
-                                       column(3,
-                                              actionButton(inputId="load_and_train_data_LR", label="Train models"),
-                                              offset = 0
-                                       )
-                                       
-                                     ),fluidRow(
-                                       
-                                       sliderInput("n_train_LR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=1, step = 0.01)
-                                       
-                                     ),
-                           
-                                     fluidRow(
-                                       textOutput(outputId="acc_pct_LR ")
-                                     )
-                                     
-                           ),
-                           
-                           tabPanel("model params"),
-                           tabPanel("model")
-                           
-                           
-                         )),
+                           tabPanel("train model",
+                                  fluidRow(
+                                     column(2,
+                                            uiOutput("target_selected_lr_ui"),
+                                            sliderInput("n_train_lr", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01),
+                                            actionButton("train_lr", label="Train Model")),
+                                     column(7,
+                                            htmlOutput("LR_model")),
+                                     column(3,
+                                            tags$h3(tags$u("Some metrics :")),
+                                            htmlOutput("LR_metrics"))
+                           )
+                         ))),
                          tabPanel("Decision Tree",tabsetPanel(
                            tabPanel("train model",
                                     

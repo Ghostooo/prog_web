@@ -561,4 +561,46 @@ shinyServer(function(input, output) {
     }
   })
   
+  output$target_selected_lr_ui <- renderUI({
+    if(!is.null(df$data)){
+      selectInput("target_selected_lr",
+                  label = "Target Variable",
+                  choices = names(df$data))      
+    }
+  })
+  
+  observeEvent(input$train_lr, {
+    if(!is.null(df$data)){
+      data.LR <- df$data
+      
+      set.seed(2)
+      train=sample(1:nrow(data.LR), nrow(data.LR)*input$n_train_lr)
+      test=-train
+      train_data=data.LR[train, !(names(data.LR) %in% c(input$target_selected_lr))]
+      # View(train_data)
+      test_data_input=data.LR[test, !(names(data.LR) %in% c(input$target_selected_lr))]
+      test_data_output=data.LR[test, c(input$target_selected_lr)]
+      
+      model.LR <- lm(unlist(data.LR[train, input$target_selected_lr]) ~ ., data=train_data)
+      
+      sum_model_LR <- summary(model.LR)
+      
+      output$LR_model <- renderTable({
+        temp <- data.frame(Feature=names(coefficients(model.LR)), sum_model_LR$coefficients)
+        names(temp) <- c("Feature", "Coefficient", "Standard Error",
+                         "t-Value", "p-Value")
+        temp
+      })
+      
+      output$LR_metrics <- renderText({
+        paste("<u>R² : </u> <b>", sum_model_LR$r.squared,"</b><br><br>",
+              "<u>Adjusted R² : </u> <b>", sum_model_LR$adj.r.squared,"</b>\n",
+              collapse = " ")
+      })
+      
+      #step_lm <- stepAIC(model.LR, direction="both")
+    }
+  })
+  
+  
 })
