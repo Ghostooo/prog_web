@@ -270,14 +270,14 @@ shinyUI(
                                                sliderInput("n_train_LOR", label = h3("choose the percentage of training set (0-1)"), min=0, max=1, value=0.8, step = 0.01),
                                                uiOutput("features_selected_lor_ui"),
                                                actionButton(inputId="load_and_train_data_LOR", label="Train models")),
-                                        column(7,
+                                        column(8,
                                                align="center",
                                                tags$div(
                                                  tableOutput("LOR_model"),
                                                  style="border: 1px solid black; box-shadow: 10px 5px 2px black; background-color: #f7e9d4;"
                                                )
                                         ),
-                                        column(3,
+                                        column(2,
                                                htmlOutput("LOR_metrics"),
                                                textOutput(outputId="acc_pct_LOR"),
                                                htmlOutput("residuals_LOR"))
