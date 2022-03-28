@@ -250,15 +250,7 @@ shinyServer(function(input, output) {
                 label = "Target Variable")
   }})
   
-  output$target_choices_LR <- renderUI({
-    selectInput(inputId = "target_selected_LR", choices = names(df$data),
-                label = "Target Variable")
-  })
-  
-  output$target_choices_LOR <- renderUI({
-    selectInput(inputId = "target_selected_LOR", choices = names(df$data %>% select_if(is.factor)),
-                label = "Target Variable")
-  })
+
   
   
   output$target_choices_balancing <- renderUI({
@@ -593,6 +585,18 @@ shinyServer(function(input, output) {
     }
   })
   
+  
+  
+  
+  output$target_choices_LR <- renderUI({
+    selectInput(inputId = "target_selected_LR", choices = names(df$data),
+                label = "Target Variable")
+  })
+  
+  
+  
+  
+  
   output$target_selected_lr_ui <- renderUI({
     if(!is.null(df$data)){
       selectInput("target_selected_lr",
@@ -610,17 +614,21 @@ shinyServer(function(input, output) {
     }
   })
   
+  output$target_choices_LOR <- renderUI({
+    data.LOR_ <- df$data
+    data.LOR_[sapply(data.LOR_, is.character)] <- lapply(data.LOR_[sapply(data.LOR_, is.character)], 
+                                                         as.factor)
+    selectInput(inputId = "target_selected_LOR", choices = names(data.LOR_ %>% select_if(is.factor)),
+                label = "Target Variable")
+  })
+  
   output$features_selected_lor_ui <- renderUI({
     if(!is.null(df$data)){
-      
-      data.LOR_ <- na.omit(df$data)
-      data.LOR_[sapply(data.LOR_, is.character)] <- lapply(data.LOR_[sapply(data.LOR_, is.character)], 
-                                                         as.factor)
-      data.LOR_ <- data.LOR_ %>% select_if(~ nlevels(.) >= 2)
+
       selectInput("features_selected_lor",
                   label = h3("Choose features to train with"), 
                   multiple = TRUE,
-                  choices = names(data.LOR_))     
+                  choices = names(df$data))
     }
   })
   
@@ -697,10 +705,8 @@ shinyServer(function(input, output) {
         data.LOR <- df$data[, c(input$target_selected_LOR, input$features_selected_lor)]
       }
       
-      data.LOR <- na.omit(data.LOR)
       data.LOR[sapply(data.LOR, is.character)] <- lapply(data.LOR[sapply(data.LOR, is.character)], 
                                              as.factor)
-      data.LOR <- data.LOR %>% select_if(~ nlevels(.) >= 2)
       set.seed(2)
       train=sample(1:nrow(data.LOR), nrow(data.LOR)*input$n_train_LOR)
       test=-train
@@ -708,12 +714,12 @@ shinyServer(function(input, output) {
       # View(train_data)
       test_data_input=data.LOR[test, !(names(data.LOR) %in% c(input$target_selected_LOR))]
       test_data_output=data.LOR[test, c(input$target_selected_LOR)]
-      print(input$target_selected_LOR %in% names(train_data))
       model.LOR <- glm(unlist(data.LOR[train, input$target_selected_LOR]) ~ ., 
                        family="binomial", data=train_data)
-      
+      print(names(summary(model.LOR)$coefficients))
+      print(summary(model.LOR)$coefficients[,1])
       output$LOR_model <- renderTable({
-        data.frame("Variable"=names(coef(model.LOR)),
+        data.frame("Variable"=data.frame(summary(model.LOR)$coefficients) %>% rownames(),
                    "Coefficient"=summary(model.LOR)$coefficients[,1],
                    "Standard Error"=summary(model.LOR)$coefficients[,2],
                    "z-Value"=summary(model.LOR)$coefficients[,3],
