@@ -304,6 +304,11 @@ shinyUI(
                                             htmlOutput("LR_metrics"))
                                   ),
                                   fluidRow(
+                                    column(5,
+                                           tags$h3(tags$u(tags$b("After stepAIC:")))
+                                           )
+                                  ),
+                                  fluidRow(
                                     
                                     column(7,
                                            align="center",
@@ -315,7 +320,8 @@ shinyUI(
                                     column(3,
                                            tags$h3(tags$u("Some metrics :")),
                                            htmlOutput("LR_step_metrics"))
-                                  )
+                                  ),
+                                  tags$hr()
                          ))),
                          tabPanel("Decision Tree",tabsetPanel(
                            tabPanel("train model",
@@ -346,12 +352,22 @@ shinyUI(
                                              plotOutput(outputId = "pruning_plot"),
                                              ),
                                       column(3,
-                                             selectInput("pruning", label = h3("Give the complexity of the model from the table (cp column) so that we could prune the tree :"), choices = c())),
+                                             selectInput("pruning", label = h3("Give the complexity of the model from the table (cp column) in order to prune the tree:"), choices = c()),
                                              actionButton(inputId="prune_tree", label="prune models"),
                                              tableOutput(outputId = "cp_table"),
                                              textOutput(outputId="acc_pct")
-                                          
-                                     
+                                             )
+                                    ),
+                                    fluidRow(
+                                      column(12,
+                                             align="center",
+                                               column(2,
+                                                      tags$h3(tags$b(tags$u("Variable Importance:"))),
+                                                      tableOutput("variable_importance")),
+                                               column(5,
+                                                      plotOutput("rsq_plot")
+                                               ),
+                                             offset=2)
                                     )
                            )
                           

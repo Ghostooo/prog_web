@@ -392,6 +392,8 @@ shinyServer(function(input, output) {
 
       output$pruning_plot=renderPlot({
         plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="nombre de noeud dans l'arbre")
+        
+        
       })
       
       
@@ -400,6 +402,19 @@ shinyServer(function(input, output) {
   
       
       output$cp_table=renderTable({pr})
+      
+      output$variable_importance <- renderTable({ data.frame(Variable=names(models$tree$variable.importance),
+                                                             Importance=models$tree$variable.importance) })
+      
+      
+      p.rpart <- printcp(models$tree, digits=3)
+      rel.error <- p.rpart[, 3L]
+      nsplit <- p.rpart[, 2L]
+      method <- models$tree$method
+      if (!method == "anova") 
+        warning("may not be applicable for this method")
+      output$rsq_plot <- renderPlot({ plot(nsplit, 1 - rel.error, xlab = "Number of Splits", 
+           ylab = "R-square", ylim = c(0, 1), type = "o", main="R² Values") })
     }
   })
   
@@ -424,7 +439,7 @@ shinyServer(function(input, output) {
       test_data_output=as.character(unlist(test_data_output))
       
       
-      output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
+      output$acc_pct=renderText({ paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
       
       
       
@@ -446,7 +461,6 @@ shinyServer(function(input, output) {
         annotate("text", x = 10,  y = 10,
                  size = 6,
                  label = "tree plot not available, possibly because the tree don't have splinted nodes or the model is not trained") + theme_void()
-      #text("")
     }
       
   })
@@ -693,7 +707,11 @@ shinyServer(function(input, output) {
                        family="binomial", data=train_data)
       
       output$LOR_model <- renderTable({
-        summary(model.LOR)$coefficients
+        data.frame("Variable"=names(coef(model.LOR)),
+                   "Coefficient"=summary(model.LOR)$coefficients[,1],
+                   "Standard Error"=summary(model.LOR)$coefficients[,2],
+                   "z-Value"=summary(model.LOR)$coefficients[,3],
+                   "Proba.inf.|z|"=summary(model.LOR)$coefficients[,4])
       })
       
       output$LOR_metrics <- renderText({
@@ -712,6 +730,10 @@ shinyServer(function(input, output) {
           "<u><b>Median (Q3): </b></u>", quantile(model.LOR$residuals)[[3]],
           "<br>",
           "<u><b>Q4: </b></u>", quantile(model.LOR$residuals)[[4]],
+          "<br>",
+          "<u><b>Mean: </b></u>", mean(model.LOR$residuals),
+          "<br>",
+          "<u><b>Standard deviation: </b></u>", sd(model.LOR$residuals),
           "</div>")
       })
       
