@@ -597,7 +597,7 @@ shinyServer(function(input, output) {
     if(!is.null(df$data)){
       selectInput("target_selected_lr",
                   label = "Target Variable",
-                  choices = names(df$data))      
+                  choices = names(df$data %>% select_if(is.numeric) %>% select_if(~ sum(is.na(.)) == 0)))      
     }
   })
   
@@ -612,10 +612,15 @@ shinyServer(function(input, output) {
   
   output$features_selected_lor_ui <- renderUI({
     if(!is.null(df$data)){
+      
+      data.LOR_ <- na.omit(df$data)
+      data.LOR_[sapply(data.LOR_, is.character)] <- lapply(data.LOR_[sapply(data.LOR_, is.character)], 
+                                                         as.factor)
+      data.LOR_ <- data.LOR_ %>% select_if(~ nlevels(.) >= 2)
       selectInput("features_selected_lor",
                   label = h3("Choose features to train with"), 
                   multiple = TRUE,
-                  choices = names(df$data))      
+                  choices = names(data.LOR_))     
     }
   })
   
@@ -628,7 +633,7 @@ shinyServer(function(input, output) {
         data.LR <- df$data[, c(input$target_selected_lr, input$features_selected_lr)]
       }
       
-      
+      data.LR <- data.LR %>% select_if(~ sum(is.na(.)) == 0)
       set.seed(2)
       train=sample(1:nrow(data.LR), nrow(data.LR)*input$n_train_lr)
       test=-train
@@ -642,7 +647,7 @@ shinyServer(function(input, output) {
       sum_model_LR <- summary(model.LR)
       
       output$LR_model <- renderTable({
-        temp <- data.frame(Feature=names(coefficients(model.LR)), sum_model_LR$coefficients)
+        temp <- data.frame(Feature=rownames(sum_model_LR$coefficients), sum_model_LR$coefficients)
         names(temp) <- c("Feature", "Coefficient", "Standard Error",
                          "t-Value", "p-Value")
         temp
@@ -692,9 +697,10 @@ shinyServer(function(input, output) {
         data.LOR <- df$data[, c(input$target_selected_LOR, input$features_selected_lor)]
       }
       
-      
+      data.LOR <- na.omit(data.LOR)
       data.LOR[sapply(data.LOR, is.character)] <- lapply(data.LOR[sapply(data.LOR, is.character)], 
                                              as.factor)
+      data.LOR <- data.LOR %>% select_if(~ nlevels(.) >= 2)
       set.seed(2)
       train=sample(1:nrow(data.LOR), nrow(data.LOR)*input$n_train_LOR)
       test=-train
