@@ -10,6 +10,7 @@ source("functions.R")
 library(rattle)
 library(misty)
 library(tree)
+library(MASS, include.only = 'stepAIC')
 library(FactoMineR)
 # for data balancing :
 library(ROSE)
@@ -207,6 +208,23 @@ shinyServer(function(input, output) {
     }
   })
   
+  output$box <- renderPlot({
+    
+    if(!is.null(df$data)) {
+      x.var = input$bi.dim.choice.1.vizu.quant
+      y.var = input$bi.dim.choice.2.vizu.quant
+      
+      data.x = unlist(df$data[, x.var])
+      data.y = unlist(df$data[, y.var])
+      
+      
+      qplot(x=data.x, y=data.y, xlab=x.var, ylab=y.var,
+            geom=c("boxplot", "jitter"), fill=data.x) +
+        theme(legend.title=element_blank())
+    }
+    
+  })
+  
   # Calcul et affichage du coefficient de corélation linéaire
   # ---
   output$correlation <- renderText({
@@ -232,15 +250,7 @@ shinyServer(function(input, output) {
                 label = "Target Variable")
   }})
   
-  output$target_choices_LR <- renderUI({
-    selectInput(inputId = "target_selected_LR", choices = names(df$data),
-                label = "Target Variable")
-  })
-  
-  output$target_choices_LOR <- renderUI({
-    selectInput(inputId = "target_selected_LOR", choices = names(df$data),
-                label = "Target Variable")
-  })
+
   
   
   output$target_choices_balancing <- renderUI({
@@ -374,6 +384,8 @@ shinyServer(function(input, output) {
 
       output$pruning_plot=renderPlot({
         plot(pr[,"xerror"],type="b", ylab="taux d'erreur",xlab="nombre de noeud dans l'arbre")
+        
+        
       })
       
       
@@ -382,6 +394,19 @@ shinyServer(function(input, output) {
   
       
       output$cp_table=renderTable({pr})
+      
+      output$variable_importance <- renderTable({ data.frame(Variable=names(models$tree$variable.importance),
+                                                             Importance=models$tree$variable.importance) })
+      
+      
+      p.rpart <- printcp(models$tree, digits=3)
+      rel.error <- p.rpart[, 3L]
+      nsplit <- p.rpart[, 2L]
+      method <- models$tree$method
+      if (!method == "anova") 
+        warning("may not be applicable for this method")
+      output$rsq_plot <- renderPlot({ plot(nsplit, 1 - rel.error, xlab = "Number of Splits", 
+           ylab = "R-square", ylim = c(0, 1), type = "o", main="R² Values") })
     }
   })
   
@@ -406,7 +431,7 @@ shinyServer(function(input, output) {
       test_data_output=as.character(unlist(test_data_output))
       
       
-      output$acc_pct=renderText({  paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
+      output$acc_pct=renderText({ paste("accuracy  : ",as.character(mean(predict.test!=test_data_output)*100),"%")})
       
       
       
@@ -428,7 +453,6 @@ shinyServer(function(input, output) {
         annotate("text", x = 10,  y = 10,
                  size = 6,
                  label = "tree plot not available, possibly because the tree don't have splinted nodes or the model is not trained") + theme_void()
-      #text("")
     }
       
   })
@@ -560,5 +584,175 @@ shinyServer(function(input, output) {
                  legend.title = "Correlation")      
     }
   })
+  
+  
+  
+  
+  output$target_choices_LR <- renderUI({
+    selectInput(inputId = "target_selected_LR", choices = names(df$data),
+                label = "Target Variable")
+  })
+  
+  
+  
+  
+  
+  output$target_selected_lr_ui <- renderUI({
+    if(!is.null(df$data)){
+      selectInput("target_selected_lr",
+                  label = "Target Variable",
+                  choices = names(df$data %>% select_if(is.numeric) %>% select_if(~ sum(is.na(.)) == 0)))      
+    }
+  })
+  
+  output$features_selected_lr_ui <- renderUI({
+    if(!is.null(df$data)){
+      selectInput("features_selected_lr",
+                  label = h3("Choose features to train with"), 
+                  multiple = TRUE,
+                  choices = names(df$data))      
+    }
+  })
+  
+  output$target_choices_LOR <- renderUI({
+    data.LOR_ <- df$data
+    data.LOR_[sapply(data.LOR_, is.character)] <- lapply(data.LOR_[sapply(data.LOR_, is.character)], 
+                                                         as.factor)
+    selectInput(inputId = "target_selected_LOR", choices = names(data.LOR_ %>% select_if(is.factor)),
+                label = "Target Variable")
+  })
+  
+  output$features_selected_lor_ui <- renderUI({
+    if(!is.null(df$data)){
+
+      selectInput("features_selected_lor",
+                  label = h3("Choose features to train with"), 
+                  multiple = TRUE,
+                  choices = names(df$data))
+    }
+  })
+  
+  observeEvent(input$train_lr, {
+    if(!is.null(df$data)){
+      if(is.null(input$features_selected_lr)) {
+        data.LR <- df$data
+      } else {
+        print(input$features_selected_lr)
+        data.LR <- df$data[, c(input$target_selected_lr, input$features_selected_lr)]
+      }
+      
+      data.LR <- data.LR %>% select_if(~ sum(is.na(.)) == 0)
+      set.seed(2)
+      train=sample(1:nrow(data.LR), nrow(data.LR)*input$n_train_lr)
+      test=-train
+      train_data=data.LR[train, !(names(data.LR) %in% c(input$target_selected_lr))]
+      # View(train_data)
+      test_data_input=data.LR[test, !(names(data.LR) %in% c(input$target_selected_lr))]
+      test_data_output=data.LR[test, c(input$target_selected_lr)]
+      
+      model.LR <- lm(unlist(data.LR[train, input$target_selected_lr]) ~ ., data=train_data)
+      
+      sum_model_LR <- summary(model.LR)
+      
+      output$LR_model <- renderTable({
+        temp <- data.frame(Feature=rownames(sum_model_LR$coefficients), sum_model_LR$coefficients)
+        names(temp) <- c("Feature", "Coefficient", "Standard Error",
+                         "t-Value", "p-Value")
+        temp
+      })
+      
+      output$LR_metrics <- renderText({
+        paste("<u>R² : </u> <b>", sum_model_LR$r.squared,"</b><br><br>",
+              "<u>Adjusted R² : </u> <b>", sum_model_LR$adj.r.squared,"</b>\n",
+              collapse = " ")
+      })
+      
+      # Application of a step Regression
+      
+      step_lm <- stepAIC(model.LR, direction="both")
+
+      train.var <- names(coefficients(step_lm))[!(names(coefficients(step_lm)) %in% "(Intercept)")]
+
+      # model.adjusted.LR <- lm(unlist(data.LR[train, input$target_selected_lr]) ~ ., data=train_data[, train.var])
+      # 
+      sum_step_model_LR <- summary(step_lm)
+
+      output$LR_step_model <- renderTable({
+        temp <- data.frame(Feature=names(coefficients(step_lm)), sum_step_model_LR$coefficients)
+
+        names(temp) <- c("Feature", "Coefficient", "Standard Error",
+                         "t-Value", "p-Value")
+        temp
+      })
+
+      output$LR_step_metrics <- renderText({
+          paste("<u>R² : </u> <b>", sum_step_model_LR$r.squared,"</b><br><br>",
+                "<u>Adjusted R² : </u> <b>", sum_step_model_LR$adj.r.squared,"</b>\n",
+                collapse = " ")
+      })
+      
+      
+    }
+  })
+  
+  observeEvent(input$load_and_train_data_LOR,{
+    
+    if(input$n_train_LOR!=0 && !(is.null(df$data))){
+      
+      if(is.null(input$features_selected_lor)) {
+        data.LOR <- df$data
+      } else {
+        data.LOR <- df$data[, c(input$target_selected_LOR, input$features_selected_lor)]
+      }
+      
+      data.LOR[sapply(data.LOR, is.character)] <- lapply(data.LOR[sapply(data.LOR, is.character)], 
+                                             as.factor)
+      set.seed(2)
+      train=sample(1:nrow(data.LOR), nrow(data.LOR)*input$n_train_LOR)
+      test=-train
+      train_data=data.LOR[train, !(names(data.LOR) %in% c(input$target_selected_LOR))]
+      # View(train_data)
+      test_data_input=data.LOR[test, !(names(data.LOR) %in% c(input$target_selected_LOR))]
+      test_data_output=data.LOR[test, c(input$target_selected_LOR)]
+      model.LOR <- glm(unlist(data.LOR[train, input$target_selected_LOR]) ~ ., 
+                       family="binomial", data=train_data)
+      print(names(summary(model.LOR)$coefficients))
+      print(summary(model.LOR)$coefficients[,1])
+      output$LOR_model <- renderTable({
+        data.frame("Variable"=data.frame(summary(model.LOR)$coefficients) %>% rownames(),
+                   "Coefficient"=summary(model.LOR)$coefficients[,1],
+                   "Standard Error"=summary(model.LOR)$coefficients[,2],
+                   "z-Value"=summary(model.LOR)$coefficients[,3],
+                   "Proba.inf.|z|"=summary(model.LOR)$coefficients[,4])
+      })
+      
+      output$LOR_metrics <- renderText({
+        c("<u>Dispersion :</u> ", summary(model.LOR)$dispersion, "<br><br>")
+      })
+      
+      
+      output$residuals_LOR <- renderText({
+        paste(
+          "<h2>Residuals distribution: </h2>",
+          "<div style='border: 1px solid black;'>",
+          "<u><b>Q1: </b></u>", quantile(model.LOR$residuals)[[1]],
+          "<br>",
+          "<u><b>Q2: </b></u>", quantile(model.LOR$residuals)[[2]],
+          "<br>",
+          "<u><b>Median (Q3): </b></u>", quantile(model.LOR$residuals)[[3]],
+          "<br>",
+          "<u><b>Q4: </b></u>", quantile(model.LOR$residuals)[[4]],
+          "<br>",
+          "<u><b>Mean: </b></u>", mean(model.LOR$residuals),
+          "<br>",
+          "<u><b>Standard deviation: </b></u>", sd(model.LOR$residuals),
+          "</div>")
+      })
+      
+    }
+  })
+  
+  
+
   
 })
