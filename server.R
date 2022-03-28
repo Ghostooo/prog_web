@@ -1,3 +1,10 @@
+list.of.packages <- c("shiny", "ggplot2", "tidyverse", "GGally", "reshape2",
+                      "ggthemes", "outliers", "rattle", "misty", "tree", "FactoMineR", "ROSE",
+                      "impute", "ggcorrplot")
+new.packages <- list.of.packages[!(list.of.packages %in% installed.packages()[,"Package"])]
+if(length(new.packages)) install.packages(new.packages)
+
+
 library(shiny)
 library(ggplot2)
 library(tidyverse)
